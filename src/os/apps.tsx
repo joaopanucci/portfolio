@@ -13,7 +13,7 @@ export type AppMeta = {
 export const apps: AppMeta[] = [
   { id: "about", src: "/icons/yaru/about.png", size: [760, 520], dock: true },
   { id: "projects", src: "/icons/yaru/projects.png", size: [860, 540], dock: true },
-  { id: "chess", src: "/icons/yaru/chess.svg", size: [940, 640], dock: true },
+  { id: "chess", src: "/icons/yaru/chess.svg", size: [980, 700], dock: true },
   { id: "nyron", src: "/icons/yaru/nyron.png", size: [940, 600], dock: true },
   { id: "terminal", src: "/icons/yaru/terminal.png", size: [700, 450], dock: true },
   { id: "contact", src: "/icons/yaru/contact.png", size: [560, 420], dock: true },

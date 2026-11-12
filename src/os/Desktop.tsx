@@ -12,6 +12,7 @@ import { TerminalApp } from "./apps/Terminal";
 import type { AppProps } from "./apps/types";
 import { appById, type AppId } from "./apps";
 import { Dock } from "./Dock";
+import { CODE_RE } from "./chess/rules";
 import { Launchpad } from "./Launchpad";
 import { Switcher } from "./Switcher";
 import { words, type Language } from "./i18n";
@@ -57,13 +58,21 @@ export function Desktop({
   const t = words[prefs.language];
   const java = useJavaStatus();
   const [bounds, setBounds] = useState(() => ({ width: window.innerWidth, height: window.innerHeight }));
-  const [windows, setWindows] = useState<WindowState[]>(() => [
-    constrain(
-      { id: "about", x: 110, y: 70, width: 760, height: 520, minimized: false, maximized: false },
-      { width: window.innerWidth, height: window.innerHeight },
-    ),
-  ]);
-  const [args, setArgs] = useState<Partial<Record<AppId, { value: string; nonce: number }>>>({});
+  // an invitation link (?xadrez=CODE) opens the chess app straight on the online tab
+  const [invite] = useState(() => {
+    const c = new URLSearchParams(window.location.search).get("xadrez")?.toUpperCase() ?? "";
+    return CODE_RE.test(c) ? c : null;
+  });
+  const [windows, setWindows] = useState<WindowState[]>(() => {
+    const b = { width: window.innerWidth, height: window.innerHeight };
+    const [cw, ch] = appById.chess.size;
+    return [
+      invite
+        ? constrain({ id: "chess", x: 120, y: 64, width: cw, height: ch, minimized: false, maximized: false }, b)
+        : constrain({ id: "about", x: 110, y: 70, width: 760, height: 520, minimized: false, maximized: false }, b),
+    ];
+  });
+  const [args, setArgs] = useState<Partial<Record<AppId, { value: string; nonce: number }>>>(() => (invite ? { chess: { value: invite, nonce: 1 } } : {}));
   const [bouncing, setBouncing] = useState<AppId | null>(null);
   const [spotlight, setSpotlight] = useState(false);
   const [launchpad, setLaunchpad] = useState(false);
@@ -71,7 +80,7 @@ export function Desktop({
   const [ctx, setCtx] = useState<{ x: number; y: number } | null>(null);
   const [snapZone, setSnapZone] = useState<SnapZone | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([{ id: 0, title: t.welcomeTitle, body: t.welcomeBody }]);
-  const nonce = useRef(1);
+  const nonce = useRef(2);
   const mobile = bounds.width < 640;
 
   useEffect(() => {

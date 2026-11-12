@@ -10,7 +10,7 @@ dock com magnificação, janelas arrastáveis, Spotlight (`⌘K`/`Ctrl+K`), um *
 | --- | --- |
 | Sobre mim | Perfil, experiência e tecnologias |
 | Projetos | Nyron Engine, AutoDock, Dakiali, JELCH Group, SAPS |
-| Xadrez | Desafie o João-Bot (motor de xadrez no navegador, 3 níveis) |
+| Xadrez | João-Bot em 4 níveis (motor próprio), pontuação, ranking e partidas online por código de convite (Supabase — veja [`docs/supabase.md`](docs/supabase.md)) |
 | Nyron Lab | Simulação orbital (lançamento por arraste), código Java ilustrativo e execução na JVM |
 | Terminal | Comandos respondidos pelo serviço Java (ou modo demo, sem o serviço) |
 | Contato | E-mail, GitHub, LinkedIn, Discord |
@@ -36,6 +36,8 @@ Para o terminal/Nyron Lab usarem uma JVM de verdade:
 cd services/joaoos-api
 mvn spring-boot:run -Dspring-boot.run.profiles=dev
 ```
+
+O xadrez online/ranking é opcional: sem Supabase configurado o jogo contra o João-Bot funciona normalmente.
 
 Sem o serviço Java, o JoãoOS entra em **modo demo** (respostas simuladas no navegador, sinalizadas na interface).
 Em produção, defina `NEXT_PUBLIC_JOAOOS_API_URL` apontando para a API hospedada; sem ela nenhuma requisição ao serviço é feita.

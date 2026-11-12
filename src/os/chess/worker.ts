@@ -1,6 +1,7 @@
-import { bestMove, type Level } from "./engine";
+import { think, type Level } from "./fast";
 
 self.onmessage = (e: MessageEvent<{ id: number; fen: string; level: Level }>) => {
   const { id, fen, level } = e.data;
-  self.postMessage({ id, move: bestMove(fen, level) });
+  const a = think(fen, level);
+  self.postMessage({ id, move: a.move, score: a.score, depth: a.depth });
 };
