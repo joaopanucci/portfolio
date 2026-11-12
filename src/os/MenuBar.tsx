@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { BatteryFull, Search, Sparkles, Wifi } from "lucide-react";
+import { BatteryFull, BrainCircuit, Search, Wifi } from "lucide-react";
 import type { AppId } from "./apps";
 import { languageLabel, languages, locales, type Language, type Words } from "./i18n";
 import type { JavaState } from "./java";
@@ -91,7 +91,7 @@ export function MenuBar({
   const menus: { id: string; label: ReactNode; bold?: boolean; items?: Item[] }[] = [
     {
       id: "logo",
-      label: <Sparkles size={15} aria-label={t.osName} />,
+      label: <BrainCircuit size={16} aria-label={t.osName} />,
       items: [
         { label: t.aboutOS, onSelect: () => onOpen("about") },
         "separator",

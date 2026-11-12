@@ -13,11 +13,11 @@ export const metadata: Metadata = {
     template: "%s | João Panucci",
   },
   description:
-    "JoãoOS: portfólio interativo de João Paulo Panucci Bernardes. Java, Spring Boot, React, game engine e uma viagem do Big Bang ao código.",
+    "JoãoOS: portfólio interativo de João Paulo Panucci Bernardes. Java, Spring Boot, React, game engine e um xadrez para jogar com o João.",
   alternates: { canonical: "/" },
   openGraph: {
     title: "João Panucci | Software Developer",
-    description: "Um portfólio em forma de sistema operacional cósmico. Java, Spring Boot, React e Nyron Engine.",
+    description: "Um portfólio em forma de sistema operacional neural. Java, Spring Boot, React e Nyron Engine.",
     url: "https://joaopanucci.com",
     siteName: "João Panucci",
     type: "website",
@@ -26,12 +26,12 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "João Panucci | Software Developer",
-    description: "Um portfólio em forma de sistema operacional cósmico. Java, Spring Boot, React e Nyron Engine.",
+    description: "Um portfólio em forma de sistema operacional neural. Java, Spring Boot, React e Nyron Engine.",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#04060f",
+  themeColor: "#02050a",
   width: "device-width",
   initialScale: 1,
 };

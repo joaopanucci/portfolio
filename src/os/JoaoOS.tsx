@@ -2,6 +2,7 @@
 import { useCallback, useState } from "react";
 import { AnimatePresence, MotionConfig } from "motion/react";
 import { Boot } from "./Boot";
+import { BrainRun } from "./BrainRun";
 import { Desktop } from "./Desktop";
 import { locales, words } from "./i18n";
 import { LockScreen } from "./LockScreen";
@@ -16,6 +17,7 @@ export function JoaoOS() {
   const systemReduced = useSystemReducedMotion();
   const reduced = systemReduced || prefs.reduce;
   const [phase, setPhase] = useState<Phase>("boot");
+  const [running, setRunning] = useState(false);
   const t = words[prefs.language];
 
   const finishBoot = useCallback(() => {
@@ -27,6 +29,13 @@ export function JoaoOS() {
     setPhase((p) => (p === "boot" ? "lock" : p));
   }, []);
 
+  const tint = { cyan: "#22b8ff", violet: "#a78bfa", amber: "#fbbf24" }[prefs.accent];
+  const enter = () => {
+    if (running) return;
+    if (reduced) setPhase("desktop");
+    else setRunning(true);
+  };
+
   return (
     <MotionConfig reducedMotion={reduced ? "always" : "user"}>
       <div
@@ -34,7 +43,7 @@ export function JoaoOS() {
         lang={locales[prefs.language]}
         data-accent={prefs.accent}
       >
-        <Wallpaper mode={prefs.wallpaper} reduced={reduced} accent={prefs.accent} locked={phase !== "desktop"} />
+        <Wallpaper reduced={reduced} accent={prefs.accent} locked={phase !== "desktop"} />
         <AnimatePresence mode="wait">
           {phase === "boot" && <Boot key="boot" t={t} autoSkip={reduced} onDone={finishBoot} />}
           {phase === "lock" && (
@@ -43,10 +52,12 @@ export function JoaoOS() {
               t={t}
               language={prefs.language}
               onLanguage={(language) => update({ language })}
-              onEnter={() => setPhase("desktop")}
+              leaving={running}
+              onEnter={enter}
             />
           )}
         </AnimatePresence>
+        {running && <BrainRun tint={tint} onUnlock={() => setPhase("desktop")} onDone={() => setRunning(false)} />}
         {phase === "desktop" && (
           <Desktop prefs={prefs} update={update} reduced={reduced} onLock={() => setPhase("lock")} />
         )}

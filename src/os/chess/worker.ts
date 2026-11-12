@@ -1,0 +1,6 @@
+import { bestMove, type Level } from "./engine";
+
+self.onmessage = (e: MessageEvent<{ id: number; fen: string; level: Level }>) => {
+  const { id, fen, level } = e.data;
+  self.postMessage({ id, move: bestMove(fen, level) });
+};

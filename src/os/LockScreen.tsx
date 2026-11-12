@@ -33,11 +33,13 @@ export function LockScreen({
   t,
   language,
   onLanguage,
+  leaving,
   onEnter,
 }: {
   t: Words;
   language: Language;
   onLanguage: (l: Language) => void;
+  leaving: boolean;
   onEnter: () => void;
 }) {
   const [now, setNow] = useState(() => new Date());
@@ -59,7 +61,7 @@ export function LockScreen({
   const locale = locales[language];
   return (
     <motion.div
-      className="os-lock"
+      className={`os-lock ${leaving ? "is-leaving" : ""}`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 1.06, filter: "blur(14px)" }}
@@ -102,11 +104,11 @@ export function LockScreen({
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7, duration: 1.2 }}
         >
-          <span className="r">universe</span>
+          <span className="r">neural</span>
           <span className="w">.</span>
-          <span className="b">work</span>
+          <span className="b">learn</span>
           <span className="w">( </span>
-          <span className="r">inFavor</span>
+          <span className="r">everything</span>
           <span className="w"> )</span>
         </motion.div>
         <motion.p className="os-lock-quote" initial={{ opacity: 0 }} animate={{ opacity: 0.8 }} transition={{ delay: 1 }}>

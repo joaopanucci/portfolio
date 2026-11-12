@@ -2,10 +2,20 @@ import { ImageResponse } from "next/og";
 
 export const ogSize = { width: 1200, height: 630 };
 
-const star = "M32 4 L37.5 26.5 L60 32 L37.5 37.5 L32 60 L26.5 37.5 L4 32 L26.5 26.5 Z";
+// A small feed-forward network drawn as SVG: layers of neurons joined by weighted edges.
+const LAYERS = [3, 5, 5, 2];
+const W = 500, H = 500;
+const px = (l: number) => 50 + (l / (LAYERS.length - 1)) * (W - 100);
+const py = (l: number, i: number) => H / 2 + (i - (LAYERS[l] - 1) / 2) * 86;
 
-/** Social share card: the cosmic desktop idea in a single frame. */
 export function renderOg() {
+  const edges: { x1: number; y1: number; x2: number; y2: number; o: number; orange: boolean }[] = [];
+  for (let l = 0; l < LAYERS.length - 1; l++)
+    for (let i = 0; i < LAYERS[l]; i++)
+      for (let j = 0; j < LAYERS[l + 1]; j++) {
+        const k = (i * 7 + j * 13 + l * 5) % 10;
+        edges.push({ x1: px(l), y1: py(l, i), x2: px(l + 1), y2: py(l + 1, j), o: 0.1 + k * 0.06, orange: k % 4 === 0 });
+      }
   return new ImageResponse(
     (
       <div
@@ -16,98 +26,43 @@ export function renderOg() {
           position: "relative",
           overflow: "hidden",
           color: "#f1f5f9",
-          background: "linear-gradient(135deg, #04060f 0%, #0b1030 55%, #1a0f3d 100%)",
+          background: "radial-gradient(circle at 78% 45%, #0b2a47 0%, #040b14 45%, #02050a 100%)",
         }}
       >
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            top: 0,
-            width: 1200,
-            height: 630,
-            display: "flex",
-            background: "radial-gradient(circle at 78% 36%, rgba(139,92,246,0.42) 0%, rgba(59,130,246,0.16) 32%, rgba(0,0,0,0) 62%)",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            right: 90,
-            top: 70,
-            width: 490,
-            height: 490,
-            display: "flex",
-            borderRadius: 490,
-            border: "2px solid rgba(255,255,255,0.14)",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            right: 160,
-            top: 140,
-            width: 350,
-            height: 350,
-            display: "flex",
-            borderRadius: 350,
-            border: "2px dashed rgba(255,255,255,0.18)",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            right: 235,
-            top: 215,
-            width: 200,
-            height: 200,
-            display: "flex",
-            borderRadius: 200,
-            background: "radial-gradient(circle, #fff7d6 0%, #ffb347 28%, rgba(255,120,30,0.55) 55%, rgba(255,90,20,0) 72%)",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            right: 560,
-            top: 330,
-            width: 22,
-            height: 22,
-            display: "flex",
-            borderRadius: 22,
-            background: "#67e8f9",
-            boxShadow: "0 0 24px #67e8f9",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            right: 120,
-            top: 470,
-            width: 16,
-            height: 16,
-            display: "flex",
-            borderRadius: 16,
-            background: "#fb7185",
-            boxShadow: "0 0 20px #fb7185",
-          }}
-        />
+        <div style={{ position: "absolute", right: 40, top: 65, width: W, height: H, display: "flex" }}>
+          <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}>
+            {edges.map((e, i) => (
+              <line key={i} x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2} stroke={e.orange ? "#ff9a3d" : "#22b8ff"} strokeOpacity={e.o} strokeWidth={e.o * 6} />
+            ))}
+            {LAYERS.flatMap((n, l) =>
+              Array.from({ length: n }, (_, i) => (
+                <g key={`${l}-${i}`}>
+                  <circle cx={px(l)} cy={py(l, i)} r={26} fill="#22b8ff" fillOpacity={0.12} />
+                  <circle cx={px(l)} cy={py(l, i)} r={14} fill={(l + i) % 3 === 0 ? "#ff9a3d" : "#22b8ff"} />
+                  <circle cx={px(l)} cy={py(l, i)} r={6} fill="#ffffff" />
+                </g>
+              )),
+            )}
+          </svg>
+        </div>
 
         <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "70px 80px", width: "100%" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
             <svg width="54" height="54" viewBox="0 0 64 64">
-              <path d={star} fill="#ffffff" />
+              <g stroke="#22b8ff" strokeWidth="3" strokeLinecap="round" fill="none">
+                <path d="M26 22V10M32 22V7M38 22V10M26 42V54M32 42V57M38 42V54M22 26H10M22 32H7M22 38H10M42 26H54M42 32H57M42 38H54" />
+              </g>
+              <rect x="21" y="21" width="22" height="22" rx="4" fill="#07263f" stroke="#22b8ff" strokeWidth="3" />
+              <rect x="27" y="27" width="10" height="10" rx="2" fill="#22b8ff" />
             </svg>
-            <div style={{ display: "flex", fontSize: 30, letterSpacing: 8, color: "#9aa6c4", textTransform: "uppercase" }}>
-              JoãoOS · Universe Edition
-            </div>
+            <div style={{ display: "flex", fontSize: 30, letterSpacing: 8, color: "#7f9bb8", textTransform: "uppercase" }}>JoãoOS · Neural Edition</div>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex", fontSize: 108, fontWeight: 700, letterSpacing: -3, lineHeight: 1 }}>João Panucci</div>
             <div style={{ display: "flex", marginTop: 22, fontSize: 40, color: "#cbd5e1" }}>Software Developer</div>
             <div style={{ display: "flex", marginTop: 34, gap: 14 }}>
-              {["Java", "Spring Boot", "React", "Nyron Engine"].map((tag) => (
+              {["Java", "Spring Boot", "React", "Xadrez"].map((tag) => (
                 <div
                   key={tag}
                   style={{
@@ -116,8 +71,8 @@ export function renderOg() {
                     fontSize: 26,
                     borderRadius: 99,
                     color: "#e2e8f0",
-                    background: "rgba(255,255,255,0.09)",
-                    border: "1px solid rgba(255,255,255,0.18)",
+                    background: "rgba(34,184,255,0.1)",
+                    border: "1px solid rgba(34,184,255,0.35)",
                   }}
                 >
                   {tag}
@@ -126,7 +81,7 @@ export function renderOg() {
             </div>
           </div>
 
-          <div style={{ display: "flex", fontSize: 28, color: "#9aa6c4" }}>Do Big Bang ao código · joaopanucci.com</div>
+          <div style={{ display: "flex", fontSize: 28, color: "#7f9bb8" }}>Java, produtos digitais e uma partida de xadrez · joaopanucci.com</div>
         </div>
       </div>
     ),

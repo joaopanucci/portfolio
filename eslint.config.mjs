@@ -7,6 +7,8 @@ const eslintConfig = defineConfig([
   ...nextTs,
   // Override default ignores of eslint-config-next.
   globalIgnores([
+    ".open-next/**",
+    ".wrangler/**",
     ".local-backups/**",
     "services/**/target/**",
     // Default ignores of eslint-config-next:

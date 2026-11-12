@@ -5,8 +5,7 @@ import { Search } from "lucide-react";
 import { apps, projectIcons, type AppId } from "./apps";
 import { AppIcon } from "./AppIcon";
 import { projects } from "./catalog";
-import type { Language, Words } from "./i18n";
-import { eras } from "./timeline";
+import type { Words } from "./i18n";
 
 type Result = {
   key: string;
@@ -21,12 +20,10 @@ const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCa
 
 function SpotlightPanel({
   t,
-  language,
   onClose,
   onOpen,
 }: {
   t: Words;
-  language: Language;
   onClose: () => void;
   onOpen: (id: AppId, arg?: string) => void;
 }) {
@@ -58,19 +55,11 @@ function SpotlightPanel({
           run: () => onOpen("projects", p.id),
         };
       }),
-      ...eras.map((e) => ({
-        key: `era-${e.id}`,
-        title: e.text[language].title,
-        sub: e.text[language].when,
-        kind: t.kindEra,
-        icon: <AppIcon src="/icons/yaru/timeline.png" size={30} />,
-        run: () => onOpen("cosmos", e.id),
-      })),
     ];
     const q = norm(query.trim());
     if (!q) return all.slice(0, 8);
     return all.filter((r) => norm(`${r.title} ${r.sub} ${r.kind}`).includes(q)).slice(0, 9);
-  }, [query, t, language, onOpen]);
+  }, [query, t, onOpen]);
 
   function onKey(e: React.KeyboardEvent) {
     if (e.key === "Escape") onClose();
@@ -149,7 +138,6 @@ function SpotlightPanel({
 export function Spotlight(props: {
   open: boolean;
   t: Words;
-  language: Language;
   onClose: () => void;
   onOpen: (id: AppId, arg?: string) => void;
 }) {

@@ -1,28 +1,35 @@
 "use client";
 import { motion } from "motion/react";
 import type { AppId } from "./apps";
-import { locales, type Language, type Words } from "./i18n";
+import type { Words } from "./i18n";
 import type { JavaState } from "./java";
-import { cosmicSeconds } from "./timeline";
 
 const item = {
   hidden: { opacity: 0, x: 40 },
   show: { opacity: 1, x: 0 },
 };
 
+/** A tiny board with a knight that hops between squares. */
+function MiniBoard() {
+  return (
+    <div className="os-mini-board" aria-hidden>
+      {Array.from({ length: 36 }, (_, i) => (
+        <i key={i} className={(Math.floor(i / 6) + (i % 6)) % 2 ? "d" : "l"} />
+      ))}
+      <span>♞&#xFE0E;</span>
+    </div>
+  );
+}
+
 export function Widgets({
   t,
-  language,
   java,
   onOpen,
 }: {
   t: Words;
-  language: Language;
   java: JavaState;
   onOpen: (id: AppId) => void;
 }) {
-  const seconds = cosmicSeconds(80);
-  const circumference = 2 * Math.PI * 34;
   return (
     <motion.aside
       className="os-widgets"
@@ -31,37 +38,11 @@ export function Widgets({
       transition={{ staggerChildren: 0.12, delayChildren: 0.4 }}
       aria-label="Widgets"
     >
-      <motion.button
-        variants={item}
-        className="os-widget os-widget-calendar"
-        onClick={() => onOpen("cosmos")}
-      >
-        <svg viewBox="0 0 80 80" width="72" height="72" aria-hidden>
-          <circle cx="40" cy="40" r="34" className="ring-bg" />
-          <motion.circle
-            cx="40"
-            cy="40"
-            r="34"
-            className="ring"
-            strokeDasharray={circumference}
-            initial={{ strokeDashoffset: circumference }}
-            animate={{ strokeDashoffset: circumference * 0.003 }}
-            transition={{ duration: 2.4, delay: 0.8, ease: "easeOut" }}
-          />
-          <text x="40" y="45" textAnchor="middle">
-            13,8
-          </text>
-        </svg>
+      <motion.button variants={item} className="os-widget os-widget-chess" onClick={() => onOpen("chess")}>
+        <MiniBoard />
         <div>
-          <h3>{t.widgetCalendar}</h3>
-          <p>
-            {t.widgetCalendarBody}{" "}
-            <b>
-              {seconds.toLocaleString(locales[language], { maximumFractionDigits: 2 })}{" "}
-              {t.widgetCalendarUnit}
-            </b>
-            .
-          </p>
+          <h3>{t.widgetChess}</h3>
+          <p>{t.widgetChessBody}</p>
         </div>
       </motion.button>
 

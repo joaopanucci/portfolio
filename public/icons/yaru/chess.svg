@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <clipPath id="sq"><rect x="24" y="20" width="208" height="208" rx="52"/></clipPath>
+    <linearGradient id="sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <linearGradient id="pawn" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a4255"/><stop offset="1" stop-color="#10131c"/></linearGradient>
+  </defs>
+  <rect x="24" y="30" width="208" height="208" rx="52" fill="#000" opacity=".22"/>
+  <g clip-path="url(#sq)">
+    <rect x="24" y="20" width="208" height="208" fill="#ecd9b0"/>
+    <g fill="#9a6340">
+      <rect x="76" y="20" width="52" height="52"/><rect x="180" y="20" width="52" height="52"/>
+      <rect x="24" y="72" width="52" height="52"/><rect x="128" y="72" width="52" height="52"/>
+      <rect x="76" y="124" width="52" height="52"/><rect x="180" y="124" width="52" height="52"/>
+      <rect x="24" y="176" width="52" height="52"/><rect x="128" y="176" width="52" height="52"/>
+    </g>
+    <rect x="24" y="20" width="208" height="104" fill="url(#sh)"/>
+  </g>
+  <g fill="url(#pawn)" stroke="#f4f7ff" stroke-width="5" stroke-linejoin="round">
+    <circle cx="128" cy="80" r="23"/>
+    <path d="M104 111h48l-9 15c14 10 25 28 27 53H86c2-25 13-43 27-53z"/>
+    <rect x="76" y="179" width="104" height="22" rx="9"/>
+  </g>
+</svg>
