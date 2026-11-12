@@ -1,333 +1,136 @@
 "use client";
 import { useEffect, useRef } from "react";
-import { Globe, texture } from "./globe";
-import { renderNebula } from "./nebula";
+import { along, buildArt, type Art, type Path } from "./neuralArt";
 import type { Preferences } from "./preferences";
 
-type Star = { x: number; y: number; z: number; phase: number; speed: number; tint: number };
-type Planet = { name: string; tex: string; rot: number; orbit: number; angle: number; speed: number; size: number; color: string; ring?: boolean; moon?: boolean };
-type Rock = { r: number; a: number; s: number; size: number };
-
-const TINTS = ["255,255,255", "190,215,255", "255,230,190", "255,200,170"];
-const PLANETS: Planet[] = [
-  { name: "MERCURIUS", tex: "mercury", rot: 0.6, orbit: 0.15, angle: 0.5, speed: 0.22, size: 4.5, color: "#c9b79c" },
-  { name: "VENUS", tex: "venus", rot: 1.4, orbit: 0.23, angle: 2.6, speed: 0.15, size: 6.5, color: "#f1c98a" },
-  { name: "TERRA", tex: "earth", rot: Math.PI, orbit: 0.33, angle: 4.2, speed: 0.1, size: 7, color: "#5da9ff", moon: true },
-  { name: "MARS", tex: "mars", rot: 0.2, orbit: 0.42, angle: 1.0, speed: 0.08, size: 5.5, color: "#e0713f" },
-  { name: "IUPPITER", tex: "jupiter", rot: 1.0, orbit: 0.62, angle: 5.1, speed: 0.045, size: 12, color: "#e3b98a" },
-  { name: "SATURNUS", tex: "saturn", rot: 2.0, orbit: 0.8, angle: 3.2, speed: 0.032, size: 10, color: "#ead7a6", ring: true },
-];
-const sprites = new Map<string, HTMLCanvasElement>();
-let spriteGlobe: Globe | null = null;
-/** A lit photo-sphere per planet, rendered once when its texture arrives. */
-function spriteFor(p: Planet): HTMLCanvasElement | null {
-  const hit = sprites.get(p.tex);
-  if (hit) return hit;
-  const tex = texture(p.tex);
-  if (!tex || typeof document === "undefined") return null;
-  spriteGlobe ??= new Globe();
-  const D = 96;
-  const out = document.createElement("canvas");
-  out.width = out.height = D;
-  out.getContext("2d")!.drawImage(spriteGlobe.render(D, tex, { rotation: p.rot, light: [-0.35, -0.35, 0.87], ambient: 0.25 }), 0, 0);
-  sprites.set(p.tex, out);
-  return out;
-}
-
-const rng = (seed: number) => () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
 const TAU = Math.PI * 2;
+const rng = (seed: number) => () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+const hash = (a: number, b: number) => {
+  let h = (a * 374761393 + b * 668265263) | 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
+};
+const hex2 = (v: number) => Math.round(Math.min(1, Math.max(0, v)) * 255).toString(16).padStart(2, "0");
 
+/* ───────── faint star dust ───────── */
+type Star = { x: number; y: number; z: number; phase: number; speed: number };
 function makeStars(): Star[] {
   const r = rng(11);
-  return Array.from({ length: 420 }, () => ({
-    x: r(),
-    y: r(),
-    z: Math.pow(r(), 2.4),
-    phase: r() * TAU,
-    speed: 0.4 + r() * 1.6,
-    tint: Math.floor(r() * r() * 4),
-  }));
-}
-const ROCKS: Rock[] = (() => {
-  const r = rng(5);
-  return Array.from({ length: 220 }, () => ({ r: 0.495 + (r() - 0.5) * 0.06, a: r() * TAU, s: 0.04 + r() * 0.02, size: 0.5 + r() * 0.9 }));
-})();
-type Dust = { r: number; a: number; size: number; hue: number };
-/** Two-arm logarithmic spiral with a bulge and a faint disk, seeded so it is stable between renders. */
-const GALAXY: Dust[] = (() => {
-  const r = rng(7);
-  return Array.from({ length: 1500 }, (_, i) => {
-    const kind = r();
-    if (kind < 0.22) {
-      const d = Math.pow(r(), 1.6) * 0.3;
-      return { r: d, a: r() * TAU, size: 0.5 + r() * 0.8, hue: d };
-    }
-    if (kind < 0.34) {
-      const d = Math.pow(r(), 0.8);
-      return { r: d, a: r() * TAU, size: 0.4 + r() * 0.5, hue: d };
-    }
-    const d = 0.1 + Math.pow(r(), 0.8) * 0.9;
-    const scatter = (r() - 0.5) * 0.5 * (1.15 - d * 0.6);
-    return { r: d, a: Math.log(1 + d * 7) * 2.1 + (i % 2 ? Math.PI : 0) + scatter, size: 0.5 + r() * 1.1, hue: d };
-  });
-})();
-
-function drawGalaxy(ctx: CanvasRenderingContext2D, w: number, h: number, t: number) {
-  const R = Math.min(w, h) * 0.13;
-  ctx.save();
-  ctx.translate(w * 0.86, h * 0.78);
-  ctx.rotate(-0.5);
-  ctx.scale(1, 0.5);
-  ctx.globalCompositeOperation = "lighter";
-  const core = ctx.createRadialGradient(0, 0, 0, 0, 0, R * 0.42);
-  core.addColorStop(0, "rgba(255,232,190,0.55)");
-  core.addColorStop(1, "rgba(255,200,120,0)");
-  ctx.fillStyle = core;
-  ctx.beginPath();
-  ctx.arc(0, 0, R * 0.42, 0, TAU);
-  ctx.fill();
-  const spin = t * 0.00003;
-  for (const d of GALAXY) {
-    const a = d.a + spin * (1.3 - d.r);
-    ctx.fillStyle = `rgba(${Math.round(255 - d.hue * 120)},${Math.round(220 - d.hue * 50)},${Math.round(190 + d.hue * 65)},${0.62 - d.hue * 0.35})`;
-    ctx.fillRect(Math.cos(a) * d.r * R, Math.sin(a) * d.r * R, d.size, d.size);
-  }
-  ctx.restore();
+  return Array.from({ length: 140 }, () => ({ x: r(), y: r(), z: Math.pow(r(), 2.4), phase: r() * TAU, speed: 0.4 + r() * 1.6 }));
 }
 
-type Comet = { x: number; y: number; vx: number; vy: number; life: number };
-
-function drawScene(
-  ctx: CanvasRenderingContext2D,
-  w: number,
-  h: number,
-  t: number,
-  stars: Star[],
-  pointer: { x: number; y: number },
-  shooting: { x: number; y: number; life: number } | null,
-  comet: Comet | null,
-  tint: string,
-) {
-  ctx.clearRect(0, 0, w, h);
-  const cx = w * 0.5 + pointer.x * -16;
-  const cy = h * 0.47 + pointer.y * -11;
-  const scale = Math.min(w, h * 1.55);
-  const tilt = 0.4;
-  const rot = -0.28;
-
-  // faint star-chart grid and constellation lines
-  ctx.strokeStyle = "rgba(255,226,170,0.07)";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(0, cy);
-  ctx.lineTo(w, cy);
-  ctx.moveTo(cx, 0);
-  ctx.lineTo(cx, h);
-  ctx.stroke();
-
-  const bright = stars.filter((s) => s.z > 0.78);
-  ctx.strokeStyle = "rgba(170,200,255,0.11)";
-  ctx.beginPath();
-  for (let i = 0; i < bright.length - 1; i += 3) {
-    const a = bright[i], b = bright[i + 1];
-    if (Math.hypot((a.x - b.x) * w, (a.y - b.y) * h) < 240) {
-      ctx.moveTo(a.x * w + pointer.x * a.z * 22, a.y * h + pointer.y * a.z * 16);
-      ctx.lineTo(b.x * w + pointer.x * b.z * 22, b.y * h + pointer.y * b.z * 16);
-    }
-  }
-  ctx.stroke();
-
-  drawGalaxy(ctx, w, h, t);
-
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.rotate(rot);
-
-  // degree ring around the system, like a printed star atlas
-  const ringR = 0.9 * scale;
-  ctx.strokeStyle = "rgba(255,226,170,0.12)";
-  ctx.beginPath();
-  ctx.ellipse(0, 0, ringR, ringR * tilt, 0, 0, TAU);
-  ctx.stroke();
-  for (let i = 0; i < 72; i++) {
-    const a = (i / 72) * TAU;
-    const len = i % 6 === 0 ? 9 : 4;
-    ctx.strokeStyle = `rgba(255,226,170,${i % 6 === 0 ? 0.28 : 0.14})`;
-    ctx.beginPath();
-    ctx.moveTo(Math.cos(a) * ringR, Math.sin(a) * ringR * tilt);
-    ctx.lineTo(Math.cos(a) * (ringR + len), Math.sin(a) * (ringR + len) * tilt);
-    ctx.stroke();
-  }
-
-  // orbits
-  PLANETS.forEach((p, i) => {
-    const r = p.orbit * scale;
-    ctx.strokeStyle = `rgba(255,220,160,${0.17 - i * 0.015})`;
-    ctx.setLineDash(i % 2 ? [2, 7] : []);
-    ctx.beginPath();
-    ctx.ellipse(0, 0, r, r * tilt, 0, 0, TAU);
-    ctx.stroke();
-  });
-  ctx.setLineDash([]);
-
-  // asteroid belt
-  ctx.fillStyle = "rgba(220,200,170,0.55)";
-  for (const rock of ROCKS) {
-    const a = rock.a + t * 0.001 * rock.s;
-    ctx.fillRect(Math.cos(a) * rock.r * scale, Math.sin(a) * rock.r * scale * tilt, rock.size, rock.size);
-  }
-
-  // sun: rays, corona, core
-  const pulse = 1 + Math.sin(t * 0.0012) * 0.04;
-  ctx.globalCompositeOperation = "lighter";
-  for (let i = 0; i < 90; i++) {
-    const a = (i / 90) * TAU + t * 0.00004;
-    const len = (36 + ((i * 37) % 70)) * pulse * (scale / 900);
-    ctx.strokeStyle = `rgba(255,170,70,${0.04 + (i % 3) * 0.04})`;
-    ctx.beginPath();
-    ctx.moveTo(Math.cos(a) * 24, Math.sin(a) * 24 * tilt * 1.4);
-    ctx.lineTo(Math.cos(a) * (24 + len), Math.sin(a) * (24 + len) * tilt * 1.4);
-    ctx.stroke();
-  }
-  const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, 170 * pulse);
-  glow.addColorStop(0, "rgba(255,210,130,0.95)");
-  glow.addColorStop(0.1, "rgba(255,150,50,0.55)");
-  glow.addColorStop(0.4, "rgba(255,95,25,0.14)");
-  glow.addColorStop(1, "rgba(255,90,20,0)");
-  ctx.fillStyle = glow;
-  ctx.beginPath();
-  ctx.arc(0, 0, 170 * pulse, 0, TAU);
-  ctx.fill();
-  ctx.globalCompositeOperation = "source-over";
-  const core = ctx.createRadialGradient(-4, -4, 1, 0, 0, 17);
-  core.addColorStop(0, "#fff7d6");
-  core.addColorStop(0.5, "#ffb347");
-  core.addColorStop(1, "#ea580c");
-  ctx.fillStyle = core;
-  ctx.beginPath();
-  ctx.arc(0, 0, 15 * pulse, 0, TAU);
-  ctx.fill();
-
-  // planets lit from the sun, with labels
-  ctx.font = "9px ui-monospace, Menlo, monospace";
-  PLANETS.forEach((p) => {
-    const a = p.angle + t * 0.001 * p.speed;
-    const r = p.orbit * scale;
-    const px = Math.cos(a) * r;
-    const py = Math.sin(a) * r * tilt;
-    if (p.ring) {
-      ctx.strokeStyle = "rgba(240,214,170,0.6)";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.ellipse(px, py, p.size * 2.2, p.size * 0.7, -0.35, 0, TAU);
-      ctx.stroke();
-    }
-    const dx = -px, dy = -py;
-    const len = Math.hypot(dx, dy) || 1;
-    const sprite = spriteFor(p);
-    if (sprite) ctx.drawImage(sprite, px - p.size, py - p.size, p.size * 2, p.size * 2);
-    else {
-      ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.arc(px, py, p.size, 0, TAU);
-      ctx.fill();
-    }
-    // night side: darken the hemisphere facing away from the sun
-    const night = ctx.createRadialGradient(px + (dx / len) * p.size * 0.7, py + (dy / len) * p.size * 0.7, p.size * 0.35, px, py, p.size * 1.15);
-    night.addColorStop(0, "rgba(3,5,12,0)");
-    night.addColorStop(0.6, "rgba(3,5,12,0.35)");
-    night.addColorStop(1, "rgba(3,5,12,0.92)");
-    ctx.fillStyle = night;
-    ctx.beginPath();
-    ctx.arc(px, py, p.size, 0, TAU);
-    ctx.fill();
-    if (p.ring) {
-      ctx.strokeStyle = "rgba(240,214,170,0.6)";
-      ctx.beginPath();
-      ctx.ellipse(px, py, p.size * 2.2, p.size * 0.7, -0.35, 0, Math.PI);
-      ctx.stroke();
-    }
-    if (p.moon) {
-      const ma = t * 0.004;
-      ctx.fillStyle = "#d8dde6";
-      ctx.beginPath();
-      ctx.arc(px + Math.cos(ma) * 11, py + Math.sin(ma) * 4.5, 1.3, 0, TAU);
-      ctx.fill();
-    }
-    ctx.fillStyle = "rgba(255,226,170,0.38)";
-    ctx.fillText(p.name, px + p.size + 6, py - p.size - 3);
-  });
-  ctx.restore();
-
-  // stars with parallax, tint and twinkle
-  for (const s of stars) {
-    const drift = (t * 0.000004 * (0.3 + s.z)) % 1;
-    const sx = (((s.x + drift) % 1) * w + pointer.x * s.z * 24 + w) % w;
-    const sy = s.y * h + pointer.y * s.z * 17;
-    const tw = 0.55 + 0.45 * Math.sin(t * 0.001 * s.speed + s.phase);
-    const size = 0.4 + s.z * 1.5;
-    ctx.fillStyle = `rgba(${TINTS[s.tint]},${(0.25 + s.z * 0.65) * tw})`;
-    ctx.fillRect(sx, sy, size, size);
-    if (s.z > 0.93) {
-      const a = Math.round(tw * 90 + 20).toString(16).padStart(2, "0");
-      ctx.fillStyle = `${tint}${a}`;
-      ctx.fillRect(sx - 5, sy + size / 2 - 0.3, 11, 0.7);
-      ctx.fillRect(sx + size / 2 - 0.3, sy - 5, 0.7, 11);
-    }
-  }
-
-  if (comet) {
-    const tail = 150;
-    const g = ctx.createLinearGradient(comet.x, comet.y, comet.x - comet.vx * tail, comet.y - comet.vy * tail);
-    g.addColorStop(0, "rgba(190,230,255,0.9)");
-    g.addColorStop(1, "rgba(120,180,255,0)");
-    ctx.strokeStyle = g;
-    ctx.lineWidth = 2.2;
-    ctx.beginPath();
-    ctx.moveTo(comet.x, comet.y);
-    ctx.lineTo(comet.x - comet.vx * tail, comet.y - comet.vy * tail);
-    ctx.stroke();
-    ctx.fillStyle = "#e8f6ff";
-    ctx.beginPath();
-    ctx.arc(comet.x, comet.y, 2.6, 0, TAU);
-    ctx.fill();
-  }
-
-  if (shooting) {
-    const k = shooting.life;
-    const x = shooting.x + k * 260;
-    const y = shooting.y + k * 120;
-    const g = ctx.createLinearGradient(x, y, x - 90, y - 42);
-    g.addColorStop(0, `rgba(255,255,255,${1 - k})`);
-    g.addColorStop(1, "rgba(255,255,255,0)");
-    ctx.strokeStyle = g;
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x - 90, y - 42);
-    ctx.stroke();
-  }
+function glyph(ch: string, color: string, size: number, dpr: number) {
+  const c = document.createElement("canvas");
+  c.width = c.height = Math.ceil(size * dpr);
+  const x = c.getContext("2d")!;
+  x.scale(dpr, dpr);
+  x.fillStyle = color;
+  x.font = `600 ${size * 0.92}px ui-monospace, "SF Mono", Menlo, monospace`;
+  x.textAlign = "center";
+  x.textBaseline = "middle";
+  x.fillText(ch, size / 2, size / 2 + size * 0.04);
+  return c;
 }
 
-function Nebula({ palette }: { palette: Preferences["wallpaper"] }) {
+/** Draws every line of the artwork once; the animated layer is composited on top each frame. */
+function renderStatic(art: Art, w: number, h: number, dpr: number, tint: string) {
+  const c = document.createElement("canvas");
+  c.width = w * dpr;
+  c.height = h * dpr;
+  const g = c.getContext("2d")!;
+  g.scale(dpr, dpr);
+  g.lineCap = "round";
+  g.lineJoin = "round";
+  const lw = Math.max(1.3, art.S * 0.0026);
+  const poly = (pts: [number, number][], close = false) => {
+    g.beginPath();
+    pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
+    if (close) g.closePath();
+  };
+
+  // spider web
+  g.strokeStyle = `${tint}${hex2(0.11)}`;
+  g.lineWidth = 1;
+  art.web.spokes.forEach((s) => {
+    poly(s);
+    g.stroke();
+  });
+  art.web.rings.forEach((r, i) => {
+    g.strokeStyle = `${tint}${hex2(0.16 - Math.min(0.1, i * 0.012))}`;
+    poly(r);
+    g.stroke();
+  });
+  g.fillStyle = `${tint}${hex2(0.3)}`;
+  art.web.nodes.forEach(([x, y]) => {
+    g.beginPath();
+    g.arc(x, y, 1.5, 0, TAU);
+    g.fill();
+  });
+
+  // glowing line work
+  g.shadowColor = tint;
+  g.shadowBlur = 10;
+  g.strokeStyle = tint;
+  g.lineWidth = lw;
+  poly(art.rightOutline);
+  g.stroke();
+  poly(art.leftOutline);
+  g.stroke();
+  g.beginPath();
+  g.moveTo(art.midX, art.rightOutline[0][1]);
+  g.lineTo(art.midX, art.rightOutline[art.rightOutline.length - 1][1]);
+  g.stroke();
+  g.lineWidth = lw * 0.85;
+  art.folds.forEach((f) => {
+    poly(f);
+    g.stroke();
+  });
+  g.lineWidth = lw * 0.8;
+  art.paths
+    .filter((p) => p.kind === "trace")
+    .forEach((p) => {
+      poly(p.pts);
+      g.stroke();
+    });
+  // pads
+  g.fillStyle = "#02060d";
+  art.pads.forEach(([x, y]) => {
+    g.beginPath();
+    g.arc(x, y, art.S * 0.0068, 0, TAU);
+    g.fill();
+    g.stroke();
+  });
+  // chip
+  const { x, y, half } = art.chip;
+  g.shadowBlur = 14;
+  g.fillStyle = "#03101c";
+  g.lineWidth = lw * 1.2;
+  g.beginPath();
+  g.roundRect(x - half, y - half, half * 2, half * 2, half * 0.12);
+  g.fill();
+  g.stroke();
+  g.lineWidth = lw * 0.9;
+  g.fillStyle = tint;
+  const pin = (px: number, py: number, pw: number, ph: number) => g.fillRect(px - pw / 2, py - ph / 2, pw, ph);
+  for (let i = 0; i < 6; i++) {
+    const o = -0.025 * art.S + i * 0.01 * art.S;
+    pin(x + o, y - half - half * 0.14, half * 0.1, half * 0.3);
+    pin(x + o, y + half + half * 0.14, half * 0.1, half * 0.3);
+  }
+  for (let i = 0; i < 7; i++) pin(x - half - half * 0.14, y - 0.03 * art.S + i * 0.01 * art.S, half * 0.3, half * 0.1);
+  for (let i = 0; i < 3; i++) pin(x + half + half * 0.14, y - 0.01 * art.S + i * 0.01 * art.S, half * 0.3, half * 0.1);
+  return c;
+}
+
+type Cell = { x: number; y: number; base: number; phase: number; bit: number };
+type Packet = { path: Path; d: number; speed: number; dir: 1 | -1; bit: number; flip: number };
+
+function LiveNeural({ reduced, tint, root, locked }: { reduced: boolean; tint: string; root: React.RefObject<HTMLDivElement | null>; locked: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null);
+  const lockedRef = useRef(locked);
   useEffect(() => {
-    const canvas = ref.current;
-    const ctx = canvas?.getContext("2d");
-    if (!canvas || !ctx) return;
-    canvas.classList.remove("is-ready");
-    // generate after the first paint so the lock screen is never blocked
-    const timer = window.setTimeout(() => {
-      ctx.putImageData(renderNebula(palette), 0, 0);
-      canvas.classList.add("is-ready");
-    }, 30);
-    return () => window.clearTimeout(timer);
-  }, [palette]);
-  return <canvas ref={ref} width={1024} height={576} className="os-nebula" aria-hidden />;
-}
-
-function LiveCosmos({ reduced, tint, root }: { reduced: boolean; tint: string; root: React.RefObject<HTMLDivElement | null> }) {
-  const ref = useRef<HTMLCanvasElement>(null);
+    lockedRef.current = locked;
+  }, [locked]);
   useEffect(() => {
     const canvas = ref.current;
     const ctx = canvas?.getContext("2d");
@@ -335,70 +138,186 @@ function LiveCosmos({ reduced, tint, root }: { reduced: boolean; tint: string; r
     const stars = makeStars();
     const pointer = { x: 0, y: 0 };
     const target = { x: 0, y: 0 };
+    const rand = rng(Math.floor(Math.random() * 1e6) + 1);
     let w = 0, h = 0, raf = 0;
-    let shooting: { x: number; y: number; life: number } | null = null;
-    let comet: Comet | null = null;
-    let nextShot = 3500;
-    let nextComet = 9000;
-    const resize = () => {
+    let shift = 0;
+    let art: Art | null = null;
+    let layer: HTMLCanvasElement | null = null;
+    let cells: Cell[] = [];
+    let cellPx = 10;
+    let gpx = 11;
+    let sprites: { tint: HTMLCanvasElement[]; white: HTMLCanvasElement[] } | null = null;
+    let packets: Packet[] = [];
+    const padFlash: number[] = [];
+    let chipFlash = -9999;
+    let waveStart = 0;
+
+    const spawn = (t0 = 0): Packet => {
+      const a = art!;
+      const roll = rand();
+      const pool = (kinds: Path["kind"][]) => a.paths.filter((p) => kinds.includes(p.kind));
+      const list = roll < 0.45 ? pool(["trace"]) : roll < 0.78 ? pool(["web"]) : roll < 0.92 ? pool(["fold"]) : pool(["ring"]);
+      const path = list[Math.floor(rand() * list.length)] ?? a.paths[0];
+      const dir: 1 | -1 = path.kind === "trace" ? (rand() < 0.5 ? 1 : -1) : path.kind === "web" ? (rand() < 0.7 ? 1 : -1) : 1;
+      const base = path.kind === "web" ? 0.0006 : path.kind === "ring" ? 0.0004 : 0.00032;
+      return { path, d: t0 ? rand() * path.len : 0, speed: a.S * base * (0.7 + rand() * 0.7), dir, bit: rand() < 0.5 ? 0 : 1, flip: rand() * 200 };
+    };
+
+    const setup = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       w = window.innerWidth;
       h = window.innerHeight;
       canvas.width = w * dpr;
       canvas.height = h * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      art = buildArt(w, h);
+      layer = renderStatic(art, w, h, dpr, tint);
+      gpx = Math.max(9, art.S * 0.0165);
+      cellPx = Math.max(8, art.S * 0.0215);
+      sprites = {
+        tint: [glyph("0", tint, gpx, dpr), glyph("1", tint, gpx, dpr)],
+        white: [glyph("0", "#ffffff", gpx, dpr), glyph("1", "#ffffff", gpx, dpr)],
+      };
+      // digit fill of the right hemisphere, brighter near the folds
+      const foldPts = art.folds.flat();
+      cells = [];
+      const r = rng(41);
+      for (let y = art.box.y0; y < art.box.y1; y += cellPx)
+        for (let x = art.box.x0; x < art.box.x1; x += cellPx) {
+          const cx = x + cellPx / 2, cy = y + cellPx / 2;
+          if (!art.inRight(cx, cy)) continue;
+          let near = 1e9;
+          for (const p of foldPts) near = Math.min(near, Math.hypot(p[0] - cx, p[1] - cy));
+          const base = 0.07 + Math.max(0, 1 - near / (cellPx * 2.6)) * 0.3;
+          cells.push({ x: cx, y: cy, base, phase: r() * TAU, bit: r() < 0.5 ? 0 : 1 });
+        }
+      packets = Array.from({ length: 46 }, () => spawn(1));
     };
+
+    const frame = (t: number) => {
+      if (!art || !layer || !sprites) return;
+      ctx.clearRect(0, 0, w, h);
+      for (const s of stars) {
+        const tw = 0.5 + 0.5 * Math.sin(t * 0.001 * s.speed + s.phase);
+        ctx.fillStyle = `rgba(190,215,255,${(0.1 + s.z * 0.4) * tw})`;
+        ctx.fillRect(s.x * w + pointer.x * s.z * 16, s.y * h + pointer.y * s.z * 11, 0.5 + s.z * 1.2, 0.5 + s.z * 1.2);
+      }
+
+      ctx.save();
+      ctx.translate(pointer.x * 9 + shift, pointer.y * 6);
+
+      // soft halo behind the chip
+      const { chip, S } = art;
+      const halo = ctx.createRadialGradient(chip.x, chip.y, 0, chip.x, chip.y, S * 0.5);
+      halo.addColorStop(0, `${tint}${hex2(0.16)}`);
+      halo.addColorStop(1, `${tint}00`);
+      ctx.fillStyle = halo;
+      ctx.fillRect(chip.x - S * 0.5, chip.y - S * 0.5, S, S);
+
+      ctx.drawImage(layer, 0, 0, w, h);
+
+      // a wave leaves the chip every few seconds and lights the binary cortex
+      if (t - waveStart > 3600) waveStart = t;
+      const waveR = (t - waveStart) * S * 0.00034;
+      const tick = Math.floor(t / 180);
+      for (let i = 0; i < cells.length; i++) {
+        const c = cells[i];
+        const k = (Math.hypot(c.x - chip.x, c.y - chip.y) - waveR) / (S * 0.05);
+        const b = Math.exp(-k * k) * Math.max(0, 1 - waveR / (S * 0.6));
+        const alpha = Math.min(1, c.base + Math.sin(t * 0.0018 + c.phase) * 0.05 + b * 0.8);
+        if (alpha < 0.03) continue;
+        const bit = b > 0.2 ? (hash(i, tick) > 0.5 ? 1 : 0) : c.bit;
+        ctx.globalAlpha = alpha;
+        ctx.drawImage(b > 0.45 ? sprites.white[bit] : sprites.tint[bit], c.x - gpx / 2, c.y - gpx / 2, gpx, gpx);
+      }
+      ctx.globalAlpha = 1;
+
+      // pads that just received a packet
+      art.pads.forEach(([x, y], i) => {
+        const age = t - (padFlash[i] ?? -9999);
+        if (age > 700) return;
+        const k = 1 - age / 700;
+        const gr = ctx.createRadialGradient(x, y, 0, x, y, S * 0.03);
+        gr.addColorStop(0, `rgba(255,255,255,${k})`);
+        gr.addColorStop(0.4, `${tint}${hex2(0.7 * k)}`);
+        gr.addColorStop(1, `${tint}00`);
+        ctx.fillStyle = gr;
+        ctx.beginPath();
+        ctx.arc(x, y, S * 0.03, 0, TAU);
+        ctx.fill();
+      });
+
+      // chip core
+      const cf = Math.max(0, 1 - (t - chipFlash) / 500);
+      const pulse = 0.55 + 0.25 * Math.sin(t * 0.003) + cf * 0.5;
+      const core = chip.half * 1.15;
+      ctx.fillStyle = `${tint}${hex2(Math.min(1, pulse))}`;
+      ctx.shadowColor = tint;
+      ctx.shadowBlur = 14 + cf * 16;
+      ctx.fillRect(chip.x - core / 2, chip.y - core / 2, core, core);
+      ctx.shadowBlur = 0;
+
+      // data packets: binary digits running along traces, web strands and folds
+      const dt = reduced ? 0 : 16;
+      for (let i = 0; i < packets.length; i++) {
+        const p = packets[i];
+        p.d += p.speed * dt;
+        p.flip -= dt;
+        if (p.flip <= 0) {
+          p.bit = p.bit ? 0 : 1;
+          p.flip = 160 + rand() * 260;
+        }
+        if (p.d >= p.path.len) {
+          if (p.path.kind === "trace") {
+            if (p.dir > 0) padFlash[p.path.pad] = t;
+            else chipFlash = t;
+          }
+          packets[i] = spawn();
+          continue;
+        }
+        for (let k = 0; k < 6; k++) {
+          const dd = p.d - k * gpx * 0.85;
+          if (dd < 0) break;
+          const [x, y] = along(p.path, p.dir > 0 ? dd : p.path.len - dd);
+          ctx.globalAlpha = k === 0 ? 1 : Math.max(0, 0.7 - k * 0.13);
+          ctx.drawImage(k === 0 ? sprites.white[p.bit] : sprites.tint[p.bit], x - gpx / 2, y - gpx / 2, gpx, gpx);
+        }
+      }
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    };
+
     const onMove = (e: PointerEvent) => {
       target.x = e.clientX / window.innerWidth - 0.5;
       target.y = e.clientY / window.innerHeight - 0.5;
     };
-    let last = performance.now();
-    const frame = (t: number) => {
-      const dt = t - last;
-      last = t;
+    const loop = (t: number) => {
+      const goal = lockedRef.current ? (w >= 900 ? w * 0.2 : 0) : w >= 1100 ? -w * 0.045 : 0;
+      shift += (goal - shift) * 0.06;
       pointer.x += (target.x - pointer.x) * 0.04;
       pointer.y += (target.y - pointer.y) * 0.04;
       root.current?.style.setProperty("--px", pointer.x.toFixed(3));
       root.current?.style.setProperty("--py", pointer.y.toFixed(3));
-      nextShot -= dt;
-      nextComet -= dt;
-      if (!shooting && nextShot <= 0) {
-        shooting = { x: Math.random() * w * 0.6, y: Math.random() * h * 0.4, life: 0 };
-        nextShot = 5000 + Math.random() * 7000;
-      }
-      if (!comet && nextComet <= 0) {
-        const fromLeft = Math.random() > 0.5;
-        comet = { x: fromLeft ? -40 : w + 40, y: h * (0.1 + Math.random() * 0.3), vx: (fromLeft ? 1 : -1) * (0.22 + Math.random() * 0.1), vy: 0.07, life: 0 };
-        nextComet = 16000 + Math.random() * 14000;
-      }
-      if (shooting) {
-        shooting.life += dt / 900;
-        if (shooting.life >= 1) shooting = null;
-      }
-      if (comet) {
-        comet.x += comet.vx * dt;
-        comet.y += comet.vy * dt;
-        if (comet.x < -300 || comet.x > w + 300 || comet.y > h + 100) comet = null;
-      }
-      drawScene(ctx, w, h, t, stars, pointer, shooting, comet, tint);
-      raf = requestAnimationFrame(frame);
+      frame(t);
+      raf = requestAnimationFrame(loop);
     };
-    const still = () => drawScene(ctx, w, h, 12000, stars, pointer, null, null, tint);
+    const still = () => {
+      shift = lockedRef.current ? (w >= 900 ? w * 0.2 : 0) : w >= 1100 ? -w * 0.045 : 0;
+      waveStart = 0;
+      frame(900);
+    };
     const onVisibility = () => {
       cancelAnimationFrame(raf);
-      if (!document.hidden && !reduced) {
-        last = performance.now();
-        raf = requestAnimationFrame(frame);
-      }
+      if (!document.hidden && !reduced) raf = requestAnimationFrame(loop);
     };
     const onResize = () => {
-      resize();
+      setup();
       if (reduced) still();
     };
-    resize();
+    setup();
     if (reduced) still();
     else {
-      raf = requestAnimationFrame(frame);
+      raf = requestAnimationFrame(loop);
       window.addEventListener("pointermove", onMove);
       document.addEventListener("visibilitychange", onVisibility);
     }
@@ -414,22 +333,20 @@ function LiveCosmos({ reduced, tint, root }: { reduced: boolean; tint: string; r
 }
 
 export function Wallpaper({
-  mode,
   reduced,
   accent,
   locked,
 }: {
-  mode: Preferences["wallpaper"];
   reduced: boolean;
   accent: Preferences["accent"];
   locked: boolean;
 }) {
   const root = useRef<HTMLDivElement>(null);
-  const tint = { cyan: "#67e8f9", violet: "#c4b5fd", amber: "#fcd34d" }[accent];
+  const tint = { cyan: "#22b8ff", violet: "#a78bfa", amber: "#fbbf24" }[accent];
   return (
-    <div ref={root} className={`os-wallpaper is-${mode} ${locked ? "is-locked" : ""} ${reduced ? "is-still" : ""}`} aria-hidden>
-      <Nebula palette={mode} />
-      <LiveCosmos reduced={reduced} tint={tint} root={root} />
+    <div ref={root} className={`os-wallpaper ${locked ? "is-locked" : ""} ${reduced ? "is-still" : ""}`} aria-hidden>
+      <div className="os-void" />
+      <LiveNeural reduced={reduced} tint={tint} root={root} locked={locked} />
       <div className="absolute inset-0 os-vignette" />
     </div>
   );

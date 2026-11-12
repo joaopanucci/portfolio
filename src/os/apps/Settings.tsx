@@ -6,14 +6,9 @@ import type { Preferences } from "../preferences";
 import type { AppProps } from "./types";
 
 const accents: { id: Preferences["accent"]; color: string; key: "cyan" | "violet" | "amber" }[] = [
-  { id: "cyan", color: "#67e8f9", key: "cyan" },
-  { id: "violet", color: "#c4b5fd", key: "violet" },
-  { id: "amber", color: "#fcd34d", key: "amber" },
-];
-const wallpapers: { id: Preferences["wallpaper"]; key: "wallpaperNebula" | "wallpaperEmber" | "wallpaperAurora"; css: string }[] = [
-  { id: "nebula", key: "wallpaperNebula", css: "radial-gradient(60% 80% at 70% 30%, #8b5cf6aa, transparent 70%), radial-gradient(60% 70% at 25% 75%, #2563ebcc, transparent 70%), #060a1c" },
-  { id: "ember", key: "wallpaperEmber", css: "radial-gradient(60% 80% at 70% 30%, #f97316aa, transparent 70%), radial-gradient(60% 70% at 25% 75%, #be123ccc, transparent 70%), #0c0408" },
-  { id: "aurora", key: "wallpaperAurora", css: "radial-gradient(60% 80% at 70% 30%, #a78bfaaa, transparent 70%), radial-gradient(60% 70% at 25% 75%, #14b8a6cc, transparent 70%), #04101a" },
+  { id: "cyan", color: "#22b8ff", key: "cyan" },
+  { id: "violet", color: "#a78bfa", key: "violet" },
+  { id: "amber", color: "#fbbf24", key: "amber" },
 ];
 
 function Toggle({ label, hint, checked, onChange }: { label: string; hint?: string; checked: boolean; onChange: (v: boolean) => void }) {
@@ -48,23 +43,6 @@ export function SettingsApp({ t, prefs, update }: AppProps) {
       <div className="os-pane">
         {section === "look" && (
           <div className="space-y-6">
-            <div>
-              <h3 className="os-h3">{t.wallpaper}</h3>
-              <div className="os-wall-grid" role="radiogroup" aria-label={t.wallpaper}>
-                {wallpapers.map((w) => (
-                  <button
-                    key={w.id}
-                    role="radio"
-                    aria-checked={prefs.wallpaper === w.id}
-                    className={prefs.wallpaper === w.id ? "is-sel" : ""}
-                    onClick={() => update({ wallpaper: w.id })}
-                  >
-                    <span className="os-wall-thumb" style={{ background: w.css }} />
-                    {t[w.key]}
-                  </button>
-                ))}
-              </div>
-            </div>
             <div>
               <h3 className="os-h3">{t.accent}</h3>
               <div className="os-swatches" role="radiogroup" aria-label={t.accent}>

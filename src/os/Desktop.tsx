@@ -1,12 +1,11 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { Sparkles } from "lucide-react";
+import { BrainCircuit } from "lucide-react";
 import { AboutApp } from "./apps/About";
 import { ContactApp } from "./apps/Contact";
-import { CosmosApp } from "./apps/Cosmos";
+import { ChessApp } from "./apps/Chess";
 import { NyronApp } from "./apps/Nyron";
-import { PlanetariumApp } from "./apps/Planetarium";
 import { ProjectsApp } from "./apps/Projects";
 import { SettingsApp } from "./apps/Settings";
 import { TerminalApp } from "./apps/Terminal";
@@ -31,10 +30,8 @@ function Content({ id, ...props }: AppProps & { id: AppId }) {
       return <AboutApp {...props} />;
     case "projects":
       return <ProjectsApp {...props} />;
-    case "cosmos":
-      return <CosmosApp {...props} />;
-    case "planetarium":
-      return <PlanetariumApp {...props} />;
+    case "chess":
+      return <ChessApp {...props} />;
     case "nyron":
       return <NyronApp {...props} />;
     case "terminal":
@@ -230,7 +227,7 @@ export function Desktop({
         }}
       />
 
-      {!mobile && bounds.width >= 1100 && <Widgets t={t} language={prefs.language} java={java} onOpen={open} />}
+      {!mobile && bounds.width >= 1100 && <Widgets t={t} java={java} onOpen={open} />}
 
       <AnimatePresence>
         {windows.map((w, index) => (
@@ -291,7 +288,7 @@ export function Desktop({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.1 } }}
           >
-            {(["about", "projects", "cosmos", "planetarium", "nyron", "terminal"] as AppId[]).map((id) => (
+            {(["about", "projects", "chess", "nyron", "terminal"] as AppId[]).map((id) => (
               <button
                 key={id}
                 role="menuitem"
@@ -308,11 +305,11 @@ export function Desktop({
               role="menuitem"
               onClick={() => {
                 setCtx(null);
-                const order = ["nebula", "ember", "aurora"] as const;
-                update({ wallpaper: order[(order.indexOf(prefs.wallpaper) + 1) % order.length] });
+                const order = ["cyan", "violet", "amber"] as const;
+                update({ accent: order[(order.indexOf(prefs.accent) + 1) % order.length] });
               }}
             >
-              {t.changeWallpaper}
+              {t.changeAccent}
             </button>
             <button role="menuitem" onClick={() => { setCtx(null); open("settings"); }}>
               {t.settings}
@@ -328,7 +325,7 @@ export function Desktop({
         )}
       </AnimatePresence>
 
-      <Spotlight open={spotlight} t={t} language={prefs.language} onClose={() => setSpotlight(false)} onOpen={open} />
+      <Spotlight open={spotlight} t={t} onClose={() => setSpotlight(false)} onOpen={open} />
 
       <div className="os-toasts" aria-live="polite">
         <AnimatePresence>
@@ -343,7 +340,7 @@ export function Desktop({
               onClick={() => dismiss(item.id)}
             >
               <span className="os-toast-ico">
-                <Sparkles size={18} />
+                <BrainCircuit size={18} />
               </span>
               <div>
                 <b>{item.title}</b>

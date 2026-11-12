@@ -2,17 +2,17 @@
 import { useEffect, useRef, useState } from "react";
 import { apps } from "../apps";
 import { callJava, useJavaStatus } from "../java";
-import { cosmicDate } from "../timeline";
 import type { AppProps } from "./types";
 
 type Entry = { command: string; output: string[]; error?: boolean };
 const COMMANDS = ["help", "about", "projects", "skills", "nyron", "neofetch", "java --version", "whoami", "clear"];
-const LOCAL_HELP = "neofetch · open <app> · theme <cyan|violet|amber> · date --cosmic";
+const LOCAL_HELP = "neofetch · open <app> · theme <cyan|violet|amber>";
 const BANNER = [
-  "      ✦        JoãoOS · Universe Edition",
-  "    ·   ·      java · spring · react · nyron",
-  "   ✦  ☼  ✦",
-  "    ·   ·",
+  "   o───o───o      JoãoOS · Neural Edition",
+  "  /│\ /│\ /│\     java · spring · react · nyron",
+  " o─┼─o─┼─o─┼─o",
+  "  \│/ \│/ \│/",
+  "   o───o───o",
 ];
 
 export function TerminalApp({ t, language, prefs, update, openApp }: AppProps) {
@@ -42,7 +42,7 @@ export function TerminalApp({ t, language, prefs, update, openApp }: AppProps) {
         lines: [
           "joao@joaoos",
           "-----------",
-          "OS:      JoãoOS Universe Edition",
+          "OS:      JoãoOS Neural Edition",
           "Host:    João Panucci",
           "Stack:   Next.js 16 · React 19 · Java 21",
           `Java:    ${java === "live" ? "JVM " + t.javaLive : t.javaDemo}`,
@@ -51,10 +51,6 @@ export function TerminalApp({ t, language, prefs, update, openApp }: AppProps) {
           `Uptime:  ${mins}m ${secs}s`,
         ],
       };
-    }
-    if (text === "date --cosmic") {
-      const c = cosmicDate(0, language);
-      return { lines: [`${t.cosmicNow}: ${c.date} · ${c.time}`] };
     }
     if (name === "theme") {
       if (arg === "cyan" || arg === "violet" || arg === "amber") {

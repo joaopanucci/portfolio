@@ -28,7 +28,7 @@ export function Boot({ t, autoSkip, onDone }: { t: Words; autoSkip: boolean; onD
   return (
     <motion.div className="os-boot" exit={{ opacity: 0, scale: 1.04 }} transition={{ duration: 0.6 }}>
       <motion.div
-        className="os-boot-star"
+        className="os-boot-mark"
         initial={{ scale: 0.4, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 1.1, ease: "easeOut" }}
@@ -36,13 +36,16 @@ export function Boot({ t, autoSkip, onDone }: { t: Words; autoSkip: boolean; onD
         <svg viewBox="0 0 100 100" aria-hidden>
           <defs>
             <radialGradient id="boot-glow">
-              <stop offset="0" stopColor="#fff" />
-              <stop offset="0.35" stopColor="#ffd37a" />
-              <stop offset="1" stopColor="#ff7a1a" stopOpacity="0" />
+              <stop offset="0" stopColor="#22b8ff" stopOpacity="0.55" />
+              <stop offset="1" stopColor="#22b8ff" stopOpacity="0" />
             </radialGradient>
           </defs>
-          <circle cx="50" cy="50" r="46" fill="url(#boot-glow)" opacity="0.55" />
-          <path d="M50 6 L57 43 L94 50 L57 57 L50 94 L43 57 L6 50 L43 43 Z" fill="#fff" />
+          <circle cx="50" cy="50" r="48" fill="url(#boot-glow)" />
+          <g stroke="#22b8ff" strokeWidth="3.2" strokeLinecap="round" fill="none">
+            <path d="M40 34V18M50 34V12M60 34V18M40 66V82M50 66V88M60 66V82M34 40H18M34 50H12M34 60H18M66 40H82M66 50H88M66 60H82" />
+          </g>
+          <rect x="32" y="32" width="36" height="36" rx="6" fill="#06203a" stroke="#22b8ff" strokeWidth="3.4" />
+          <rect x="42" y="42" width="16" height="16" rx="3" fill="#22b8ff" />
         </svg>
       </motion.div>
       <motion.h1 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>

@@ -1,7 +1,8 @@
 # João Panucci — JoãoOS
 
-Portfólio interativo em forma de sistema operacional cósmico (estilo macOS): wallpaper vivo, dock com magnificação,
-janelas arrastáveis, Spotlight (`⌘K`/`Ctrl+K`), linha do tempo do universo e o **Nyron Lab** (mini game engine + Java).
+Portfólio interativo em forma de sistema operacional neural (estilo macOS): wallpaper de cérebro-circuito feito de 0 e 1,
+dock com magnificação, janelas arrastáveis, Spotlight (`⌘K`/`Ctrl+K`), um **Xadrez** para desafiar o João e o
+**Nyron Lab** (mini game engine + Java).
 
 ## Aplicativos
 
@@ -9,18 +10,18 @@ janelas arrastáveis, Spotlight (`⌘K`/`Ctrl+K`), linha do tempo do universo e 
 | --- | --- |
 | Sobre mim | Perfil, experiência e tecnologias |
 | Projetos | Nyron Engine, AutoDock, Dakiali, JELCH Group, SAPS |
-| Linha do Tempo | Do Big Bang ao código, com calendário cósmico |
+| Xadrez | Desafie o João-Bot (motor de xadrez no navegador, 3 níveis) |
 | Nyron Lab | Simulação orbital (lançamento por arraste), código Java ilustrativo e execução na JVM |
 | Terminal | Comandos respondidos pelo serviço Java (ou modo demo, sem o serviço) |
 | Contato | E-mail, GitHub, LinkedIn, Discord |
-| Configurações | Idioma (PT/EN/ES), wallpaper, cor de destaque, redução de movimento |
+| Configurações | Idioma (PT/EN/ES), cor de destaque, redução de movimento |
 
-Código do front-end em `src/os/`; textos em `src/os/i18n.ts` e `src/os/timeline.ts`.
+Código do front-end em `src/os/`; textos em `src/os/i18n.ts`; xadrez em `src/os/chess/` e `src/os/apps/Chess.tsx`; arte do wallpaper em `src/os/neuralArt.ts`.
 
 ## Créditos
 
 Ícones dos apps: tema **Yaru** (Ubuntu), licença CC BY-SA 4.0 — veja `public/icons/yaru/README.md`.
-Ícones de interface: Lucide e Phosphor.
+Ícones de interface: Lucide.
 
 ## Rodando
 
