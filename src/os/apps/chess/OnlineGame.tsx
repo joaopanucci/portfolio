@@ -121,10 +121,12 @@ export function OnlineGame({
     toast(t.chessTitle, row.result === "draw" ? t.chessDrawn : won ? t.chessYouWon : t.chessYouLost);
   }, [row, side, onProfile, toast, t]);
 
+  // the move just played stays on the board until the server row catches up with it
+  const inFlight = optimistic && row && optimistic.base === row.moves.length ? optimistic : null;
   const moves = useMemo(() => {
     if (!row) return [];
-    return optimistic && optimistic.base === row.moves.length ? [...row.moves, optimistic.uci] : row.moves;
-  }, [row, optimistic]);
+    return inFlight ? [...row.moves, inFlight.uci] : row.moves;
+  }, [row, inFlight]);
   const chess = useMemo(() => replay(moves), [moves]);
   const snap = useMemo(() => snapshot(chess ?? replay([])!), [chess]);
   const [targets, setTargets] = useState<Move[]>([]);
@@ -165,6 +167,7 @@ export function OnlineGame({
     try {
       const res = await call<{ game: GameRow }>({ action: "move", code, uci });
       setRow(res.game);
+      setOptimistic(null);
     } catch (e) {
       setOptimistic(null);
       fail(e);
@@ -172,7 +175,7 @@ export function OnlineGame({
   };
 
   const click = (sq: Square) => {
-    if (!row || row.status !== "active" || !side || !chess || optimistic || pending) return;
+    if (!row || row.status !== "active" || !side || !chess || inFlight || pending) return;
     if (snap.turn !== side) return;
     const piece = chess.get(sq);
     if (selected) {

@@ -35,7 +35,7 @@ export async function session(create: boolean): Promise<{ userId: string; token:
   return { userId: res.data.session.user.id, token: res.data.session.access_token };
 }
 
-export async function call<T>(body: Record<string, unknown>): Promise<T> {
+export async function call<T>(body: Record<string, unknown>, retry = true): Promise<T> {
   const s = await session(true);
   if (!s) throw new ApiFail("unauthorized", 401);
   let res: Response;
@@ -49,6 +49,11 @@ export async function call<T>(body: Record<string, unknown>): Promise<T> {
     throw new ApiFail("network", 0);
   }
   const json = (await res.json().catch(() => ({}))) as { error?: string } & T;
+  if (res.status === 401 && retry) {
+    // the stored session is stale (expired, or its account was removed): start a fresh anonymous one
+    await db().auth.signOut({ scope: "local" });
+    return call<T>(body, false);
+  }
   if (!res.ok) throw new ApiFail(json.error ?? "generic", res.status);
   return json;
 }
