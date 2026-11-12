@@ -1,21 +1,38 @@
 "use client";
 import { useEffect, useRef } from "react";
+import { Globe, texture } from "./globe";
 import { renderNebula } from "./nebula";
 import type { Preferences } from "./preferences";
 
 type Star = { x: number; y: number; z: number; phase: number; speed: number; tint: number };
-type Planet = { name: string; orbit: number; angle: number; speed: number; size: number; color: string; ring?: boolean; moon?: boolean };
+type Planet = { name: string; tex: string; rot: number; orbit: number; angle: number; speed: number; size: number; color: string; ring?: boolean; moon?: boolean };
 type Rock = { r: number; a: number; s: number; size: number };
 
 const TINTS = ["255,255,255", "190,215,255", "255,230,190", "255,200,170"];
 const PLANETS: Planet[] = [
-  { name: "MERCURIUS", orbit: 0.15, angle: 0.5, speed: 0.22, size: 3, color: "#c9b79c" },
-  { name: "VENUS", orbit: 0.23, angle: 2.6, speed: 0.15, size: 4.5, color: "#f1c98a" },
-  { name: "TERRA", orbit: 0.33, angle: 4.2, speed: 0.1, size: 5, color: "#5da9ff", moon: true },
-  { name: "MARS", orbit: 0.42, angle: 1.0, speed: 0.08, size: 3.6, color: "#e0713f" },
-  { name: "IUPPITER", orbit: 0.62, angle: 5.1, speed: 0.045, size: 9, color: "#e3b98a" },
-  { name: "SATURNUS", orbit: 0.8, angle: 3.2, speed: 0.032, size: 7.5, color: "#ead7a6", ring: true },
+  { name: "MERCURIUS", tex: "mercury", rot: 0.6, orbit: 0.15, angle: 0.5, speed: 0.22, size: 4.5, color: "#c9b79c" },
+  { name: "VENUS", tex: "venus", rot: 1.4, orbit: 0.23, angle: 2.6, speed: 0.15, size: 6.5, color: "#f1c98a" },
+  { name: "TERRA", tex: "earth", rot: Math.PI, orbit: 0.33, angle: 4.2, speed: 0.1, size: 7, color: "#5da9ff", moon: true },
+  { name: "MARS", tex: "mars", rot: 0.2, orbit: 0.42, angle: 1.0, speed: 0.08, size: 5.5, color: "#e0713f" },
+  { name: "IUPPITER", tex: "jupiter", rot: 1.0, orbit: 0.62, angle: 5.1, speed: 0.045, size: 12, color: "#e3b98a" },
+  { name: "SATURNUS", tex: "saturn", rot: 2.0, orbit: 0.8, angle: 3.2, speed: 0.032, size: 10, color: "#ead7a6", ring: true },
 ];
+const sprites = new Map<string, HTMLCanvasElement>();
+let spriteGlobe: Globe | null = null;
+/** A lit photo-sphere per planet, rendered once when its texture arrives. */
+function spriteFor(p: Planet): HTMLCanvasElement | null {
+  const hit = sprites.get(p.tex);
+  if (hit) return hit;
+  const tex = texture(p.tex);
+  if (!tex || typeof document === "undefined") return null;
+  spriteGlobe ??= new Globe();
+  const D = 96;
+  const out = document.createElement("canvas");
+  out.width = out.height = D;
+  out.getContext("2d")!.drawImage(spriteGlobe.render(D, tex, { rotation: p.rot, light: [-0.35, -0.35, 0.87], ambient: 0.25 }), 0, 0);
+  sprites.set(p.tex, out);
+  return out;
+}
 
 const rng = (seed: number) => () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
 const TAU = Math.PI * 2;
@@ -207,12 +224,20 @@ function drawScene(
     }
     const dx = -px, dy = -py;
     const len = Math.hypot(dx, dy) || 1;
-    const lx = (dx / len) * p.size * 0.5, ly = (dy / len) * p.size * 0.5;
-    const g = ctx.createRadialGradient(px + lx, py + ly, 0, px, py, p.size * 1.25);
-    g.addColorStop(0, "#fff");
-    g.addColorStop(0.3, p.color);
-    g.addColorStop(1, "rgba(4,6,14,0.95)");
-    ctx.fillStyle = g;
+    const sprite = spriteFor(p);
+    if (sprite) ctx.drawImage(sprite, px - p.size, py - p.size, p.size * 2, p.size * 2);
+    else {
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(px, py, p.size, 0, TAU);
+      ctx.fill();
+    }
+    // night side: darken the hemisphere facing away from the sun
+    const night = ctx.createRadialGradient(px + (dx / len) * p.size * 0.7, py + (dy / len) * p.size * 0.7, p.size * 0.35, px, py, p.size * 1.15);
+    night.addColorStop(0, "rgba(3,5,12,0)");
+    night.addColorStop(0.6, "rgba(3,5,12,0.35)");
+    night.addColorStop(1, "rgba(3,5,12,0.92)");
+    ctx.fillStyle = night;
     ctx.beginPath();
     ctx.arc(px, py, p.size, 0, TAU);
     ctx.fill();

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="12 12 112 112" fill="none">
+  <defs>
+    <g id="jelch-mark">
+      <path d="M67 27 52 41v54L37 85v-7H22v12l45 25V27Z"/>
+      <path d="m70 28 44-5-12 16-32 4V28Z"/>
+      <path d="m75 52 39-5-11 16-28 4V52Z"/>
+      <path d="M91 68h15v13l-38 33V98l23-21v-9Z"/>
+    </g>
+  </defs>
+  <use href="#jelch-mark" fill="#080808" transform="translate(3 2.5)"/>
+  <use href="#jelch-mark" fill="#101010" transform="translate(1.5 1.25)"/>
+  <use href="#jelch-mark" fill="#1b1b1b" stroke="#535353" stroke-width=".65" stroke-linejoin="round"/>
+</svg>

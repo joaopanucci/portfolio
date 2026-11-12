@@ -1,3 +1,4 @@
+import { Globe, texture } from "./globe";
 import { fbm } from "./nebula";
 
 export type Focus = { x: number; y: number; r: number };
@@ -226,61 +227,39 @@ function disk(c: Ctx, w: number, h: number, t: number, f: Focus) {
   c.restore();
 }
 
+let earthGlobe: Globe | null = null;
+let moonGlobe: Globe | null = null;
 function earth(c: Ctx, w: number, h: number, t: number, f: Focus) {
   const R = f.r * 0.82;
-  // moon behind
+  const dpr = c.getTransform().a || 1;
+  const light: [number, number, number] = [-0.62, -0.3, 0.72];
   const ma = t * 0.0004;
-  const mx = f.x + Math.cos(ma) * R * 1.75, my = f.y + Math.sin(ma) * R * 0.45;
+  const mR = R * 0.2;
+  const mx = f.x + Math.cos(ma) * R * 1.8, my = f.y + Math.sin(ma) * R * 0.4;
   const moonFront = Math.sin(ma) > 0;
-  if (!moonFront) sphere(c, mx, my, R * 0.16, "#cfd4dc");
-  glow(c, f.x, f.y, R * 1.45, "90,160,255", 0.3);
-  c.save();
-  c.beginPath();
-  c.arc(f.x, f.y, R, 0, TAU);
-  c.clip();
-  const ocean = c.createRadialGradient(f.x - R * 0.35, f.y - R * 0.35, R * 0.1, f.x, f.y, R);
-  ocean.addColorStop(0, "#4aa3ff");
-  ocean.addColorStop(0.6, "#1b4fa8");
-  ocean.addColorStop(1, "#0a2155");
-  c.fillStyle = ocean;
-  c.fillRect(f.x - R, f.y - R, R * 2, R * 2);
-  // continents: blobs on a rotating sphere
-  const lands = [[0.2, 0.25, 0.42], [1.4, -0.3, 0.5], [2.6, 0.45, 0.34], [3.8, 0.1, 0.55], [5.0, -0.5, 0.38], [0.9, -0.75, 0.3], [4.4, 0.7, 0.28]];
-  for (const [lon0, lat, size] of lands) {
-    const lon = lon0 + t * 0.00018;
-    const cosL = Math.cos(lon);
-    if (cosL < -0.2) continue;
-    const x = f.x + R * Math.sin(lon) * Math.cos(lat);
-    const y = f.y - R * Math.sin(lat);
-    c.fillStyle = "rgba(70,150,90,0.95)";
-    c.beginPath();
-    c.ellipse(x, y, R * size * 0.6 * Math.max(0.15, cosL), R * size * 0.42, lat * 0.5, 0, TAU);
-    c.fill();
-  }
-  // clouds
-  for (let i = 0; i < 12; i++) {
-    const lon = i * 0.55 + t * 0.00026;
-    const cosL = Math.cos(lon);
-    if (cosL < 0) continue;
-    const lat = Math.sin(i * 1.7) * 0.9;
-    c.fillStyle = "rgba(255,255,255,0.28)";
-    c.beginPath();
-    c.ellipse(f.x + R * Math.sin(lon) * Math.cos(lat), f.y - R * Math.sin(lat), R * 0.3 * cosL, R * 0.07, 0, 0, TAU);
-    c.fill();
-  }
-  const shade = c.createRadialGradient(f.x - R * 0.55, f.y - R * 0.45, R * 0.2, f.x - R * 0.2, f.y - R * 0.1, R * 1.5);
-  shade.addColorStop(0, "rgba(0,0,0,0)");
-  shade.addColorStop(0.55, "rgba(0,0,10,0.15)");
-  shade.addColorStop(1, "rgba(0,0,12,0.92)");
-  c.fillStyle = shade;
-  c.fillRect(f.x - R, f.y - R, R * 2, R * 2);
-  c.restore();
-  c.strokeStyle = "rgba(140,200,255,0.5)";
-  c.lineWidth = 2;
-  c.beginPath();
-  c.arc(f.x, f.y, R + 1, -2.6, 0.3);
-  c.stroke();
-  if (moonFront) sphere(c, mx, my, R * 0.16, "#cfd4dc");
+  const drawMoon = () => {
+    const tex = texture("moon");
+    if (!tex) return;
+    moonGlobe ??= new Globe();
+    const D = Math.min(160, Math.max(32, Math.round(mR * 2 * dpr)));
+    c.drawImage(moonGlobe.render(D, tex, { rotation: 2.2, light, ambient: 0.04 }), mx - mR, my - mR, mR * 2, mR * 2);
+  };
+  if (!moonFront) drawMoon();
+  glow(c, f.x, f.y, R * 1.5, "90,160,255", 0.28);
+  const tex = texture("earth");
+  if (tex) {
+    earthGlobe ??= new Globe();
+    const D = Math.min(440, Math.max(64, Math.round(R * 2 * dpr)));
+    const globe = earthGlobe.render(D, tex, {
+      rotation: Math.PI + t * 0.00011,
+      light,
+      clouds: texture("earth_clouds"),
+      cloudRotation: Math.PI + t * 0.00015,
+      atmosphere: [70, 130, 255],
+    });
+    c.drawImage(globe, f.x - R, f.y - R, R * 2, R * 2);
+  } else sphere(c, f.x, f.y, R, "#2a62c0");
+  if (moonFront) drawMoon();
 }
 
 function life(c: Ctx, w: number, h: number, t: number, f: Focus) {
