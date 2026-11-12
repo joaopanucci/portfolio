@@ -2343,27 +2343,27 @@
   font-size: 11.5px;
   color: var(--muted);
 }
-.os-rank {
+.os-lb {
   padding: 16px 20px;
   height: 100%;
   overflow: auto;
 }
-.os-rank-head {
+.os-lb-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 10px;
   margin-bottom: 10px;
 }
-.os-rank h2 {
+.os-lb h2 {
   font-size: 20px;
 }
-.os-rank table {
+.os-lb table {
   width: 100%;
   border-collapse: collapse;
   font-variant-numeric: tabular-nums;
 }
-.os-rank th {
+.os-lb th {
   text-align: left;
   font-size: 11px;
   letter-spacing: 0.08em;
@@ -2371,23 +2371,23 @@
   color: var(--muted);
   padding: 6px 8px;
 }
-.os-rank td {
+.os-lb td {
   padding: 8px;
   border-top: 1px solid var(--line);
 }
-.os-rank tr.is-me td {
+.os-lb tr.is-me td {
   background: color-mix(in srgb, var(--accent) 14%, transparent);
 }
-.os-rank td:first-child {
+.os-lb td:first-child {
   color: var(--muted);
   width: 2em;
 }
-.os-rank em {
+.os-lb em {
   color: var(--accent);
   font-style: normal;
   font-size: 12px;
 }
-.os-rank-local {
+.os-lb-local {
   display: grid;
   gap: 4px;
   margin-top: 14px;
@@ -2396,6 +2396,6 @@
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--line);
 }
-.os-rank-local small {
+.os-lb-local small {
   color: var(--muted);
 }

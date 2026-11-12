@@ -23,10 +23,10 @@ export function Ranking({ t, me }: { t: Words; me: Player | null }) {
   if (!onlineEnabled) {
     const local = readLocal();
     return (
-      <div className="os-rank">
+      <div className="os-lb">
         <h2>{t.chessRankTitle}</h2>
         <p className="os-muted">{t.chessNotConfigured}</p>
-        <div className="os-rank-local">
+        <div className="os-lb-local">
           <b>{local.points}</b> {t.chessPoints} · {local.wins}/{local.games} {t.chessRankWins.toLowerCase()}
           <small>{t.chessLocalOnly}</small>
         </div>
@@ -34,8 +34,8 @@ export function Ranking({ t, me }: { t: Words; me: Player | null }) {
     );
   }
   return (
-    <div className="os-rank">
-      <div className="os-rank-head">
+    <div className="os-lb">
+      <div className="os-lb-head">
         <h2>{t.chessRankTitle}</h2>
         <button className="os-btn" onClick={() => setTick((n) => n + 1)}>
           <RefreshCw size={14} />
