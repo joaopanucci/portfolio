@@ -1,19 +1,21 @@
-import { About } from "@/components/home/About";
-import { Contact } from "@/components/home/Contact";
-import { Experience } from "@/components/home/Experience";
-import { Hero } from "@/components/home/Hero";
-import { Projects } from "@/components/home/Projects";
-import { TechStack } from "@/components/home/TechStack";
+import { JoaoOS } from "@/os/JoaoOS";
 
 export default function Home() {
   return (
     <>
-      <Hero />
-      <About />
-      <Projects />
-      <TechStack />
-      <Experience />
-      <Contact />
+      <JoaoOS />
+      {/* Crawler- and screen-reader-friendly summary of the interactive portfolio. */}
+      <section className="sr-only">
+        <h1>João Panucci — Software Developer</h1>
+        <p>
+          Desenvolvedor de software com foco em Java, Spring Boot, React e soluções digitais. Projetos: Nyron Engine,
+          AutoDock, Dakiali, JELCH Group, SAPS.
+        </p>
+        <ul>
+          <li><a href="https://github.com/joaopanucci">GitHub</a></li>
+          <li><a href="https://www.linkedin.com/in/jaopanucci/">LinkedIn</a></li>
+        </ul>
+      </section>
     </>
   );
 }

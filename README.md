@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# João Panucci — JoãoOS
 
-## Getting Started
+Portfólio interativo em forma de sistema operacional cósmico (estilo macOS): wallpaper vivo, dock com magnificação,
+janelas arrastáveis, Spotlight (`⌘K`/`Ctrl+K`), linha do tempo do universo e o **Nyron Lab** (mini game engine + Java).
 
-First, run the development server:
+## Aplicativos
 
-```bash
+| App | O que mostra |
+| --- | --- |
+| Sobre mim | Perfil, experiência e tecnologias |
+| Projetos | Nyron Engine, AutoDock, Dakiali, JELCH Group, SAPS |
+| Linha do Tempo | Do Big Bang ao código, com calendário cósmico |
+| Nyron Lab | Simulação orbital (lançamento por arraste), código Java ilustrativo e execução na JVM |
+| Terminal | Comandos respondidos pelo serviço Java (ou modo demo, sem o serviço) |
+| Contato | E-mail, GitHub, LinkedIn, Discord |
+| Configurações | Idioma (PT/EN/ES), wallpaper, cor de destaque, redução de movimento |
+
+Código do front-end em `src/os/`; textos em `src/os/i18n.ts` e `src/os/timeline.ts`.
+
+## Créditos
+
+Ícones dos apps: tema **Yaru** (Ubuntu), licença CC BY-SA 4.0 — veja `public/icons/yaru/README.md`.
+Ícones de interface: Lucide e Phosphor.
+
+## Rodando
+
+```sh
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Para o terminal/Nyron Lab usarem uma JVM de verdade:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```sh
+cd services/joaoos-api
+mvn spring-boot:run -Dspring-boot.run.profiles=dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Sem o serviço Java, o JoãoOS entra em **modo demo** (respostas simuladas no navegador, sinalizadas na interface).
+Em produção, defina `NEXT_PUBLIC_JOAOOS_API_URL` apontando para a API hospedada; sem ela nenhuma requisição ao serviço é feita.
+Detalhes do serviço em [`services/joaoos-api/README.md`](services/joaoos-api/README.md).
 
-## Learn More
+## Deploy
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Cloudflare Workers via OpenNext: `npm run preview` / `npm run deploy`. O serviço Java precisa de hospedagem própria.
