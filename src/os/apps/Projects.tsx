@@ -44,7 +44,6 @@ export function ProjectsApp({ t, arg, openApp }: AppProps) {
       <div className="os-pane os-projects">
         <div className="os-grid">
           {list.map((p, i) => {
-            const Icon = projectIcons[p.icon];
             return (
               <motion.button
                 key={p.id}
@@ -56,7 +55,7 @@ export function ProjectsApp({ t, arg, openApp }: AppProps) {
                 whileHover={{ y: -4 }}
                 onClick={() => setSelected(p.id)}
               >
-                <AppIcon icon={Icon} colors={p.colors} size={64} />
+                <AppIcon src={projectIcons[p.icon]} size={64} />
                 <b>{p.title}</b>
                 {p.badge && <small>{t[p.badge]}</small>}
               </motion.button>
@@ -79,7 +78,6 @@ export function ProjectsApp({ t, arg, openApp }: AppProps) {
 }
 
 function Detail({ p, t, openApp }: { p: Project; t: AppProps["t"]; openApp: AppProps["openApp"] }) {
-  const Icon = projectIcons[p.icon];
   return (
     <motion.article
       className="os-detail"
@@ -90,7 +88,7 @@ function Detail({ p, t, openApp }: { p: Project; t: AppProps["t"]; openApp: AppP
       style={{ "--c1": p.colors[0], "--c2": p.colors[1] } as React.CSSProperties}
     >
       <div className="os-detail-head">
-        <AppIcon icon={Icon} colors={p.colors} size={48} />
+        <AppIcon src={projectIcons[p.icon]} size={48} />
         <div>
           <h2>{p.title}</h2>
           {p.badge && <span className="os-badge">{t[p.badge]}</span>}

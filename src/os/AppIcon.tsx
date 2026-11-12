@@ -1,27 +1,15 @@
-import type { LucideIcon } from "lucide-react";
-
-/** macOS-style squircle icon: gradient, top gloss, inner border and soft shadow. */
+/* Ubuntu "Yaru" icon (CC BY-SA 4.0, see public/icons/yaru). */
 export function AppIcon({
-  icon: Icon,
-  colors,
+  src,
   size = 56,
   className = "",
 }: {
-  icon: LucideIcon;
-  colors: [string, string];
+  src: string;
   size?: number | string;
   className?: string;
 }) {
   return (
-    <span
-      className={`os-appicon ${className}`}
-      style={{
-        width: size,
-        height: size,
-        background: `linear-gradient(160deg, ${colors[0]}, ${colors[1]})`,
-      }}
-    >
-      <Icon strokeWidth={1.8} />
-    </span>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={src} alt="" width={256} height={256} draggable={false} className={`os-appicon ${className}`} style={{ width: size, height: size }} />
   );
 }

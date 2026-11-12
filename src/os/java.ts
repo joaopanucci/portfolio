@@ -85,7 +85,7 @@ function localJava(command: string, language: Language) {
     case "about":
       return { ok: true, lines: [text.about] };
     case "projects":
-      return { ok: true, lines: ["Dakiali — https://dakiali.com", "JELCH Group — https://jelchgroup.com", "AutoDock — https://github.com/joaopanucci/autodock", "Nyron Engine · Java", "SAPS", "Acho"] };
+      return { ok: true, lines: ["Dakiali — https://dakiali.com", "JELCH Group — https://jelchgroup.com", "AutoDock — https://github.com/joaopanucci/autodock", "Nyron Engine · Java", "SAPS — https://saps.saude.ms.gov.br"] };
     case "skills":
       return { ok: true, lines: ["Java · Spring Boot · TypeScript · React · Docker · PostgreSQL"] };
     case "whoami":

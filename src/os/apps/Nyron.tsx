@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Pause, Play, RotateCcw } from "lucide-react";
 import { callJava } from "../java";
-import { PLANET_COLORS, STEP, World, predict } from "../engine";
+import { PLANET_COLORS, PRESETS, STEP, World, isStar, predict, type Preset } from "../engine";
 import { javaFiles, tokenize } from "../javaSamples";
 import type { AppProps } from "./types";
 
@@ -19,6 +19,7 @@ function Simulation({ t, reduced }: Pick<AppProps, "t" | "reduced">) {
   const live = useRef({ running, speed, trails });
   const aim = useRef<{ x: number; y: number; cx: number; cy: number } | null>(null);
   const colorIndex = useRef(4);
+  const [preset, setPreset] = useState<Preset>("solar");
 
   useEffect(() => {
     live.current = { running, speed, trails };
@@ -83,7 +84,7 @@ function Simulation({ t, reduced }: Pick<AppProps, "t" | "reduced">) {
       if (a) {
         const [wx, wy] = toWorld(a.x, a.y);
         const [vx, vy] = launchVelocity(a);
-        const path = predict(wx, wy, vx, vy);
+        const path = predict(wx, wy, vx, vy, w.bodies.filter(isStar));
         ctx!.setLineDash([3, 6]);
         ctx!.strokeStyle = "rgba(255,255,255,0.6)";
         ctx!.lineWidth = 1.2;
@@ -106,17 +107,17 @@ function Simulation({ t, reduced }: Pick<AppProps, "t" | "reduced">) {
       for (const b of w.bodies) {
         const [x, y] = toScreen(b.x, b.y);
         const r = b.radius * s;
-        if (b.fixed) {
+        if (isStar(b)) {
           const pulse = 1 + Math.sin(now * 0.003) * 0.06 + flare;
           const g = ctx!.createRadialGradient(x, y, 0, x, y, r * 5 * pulse);
-          g.addColorStop(0, "rgba(255,226,150,0.95)");
-          g.addColorStop(0.2, "rgba(255,150,40,0.45)");
-          g.addColorStop(1, "rgba(255,90,20,0)");
+          g.addColorStop(0, b.color);
+          g.addColorStop(0.2, b.color + "70");
+          g.addColorStop(1, b.color + "00");
           ctx!.fillStyle = g;
           ctx!.beginPath();
           ctx!.arc(x, y, r * 5 * pulse, 0, Math.PI * 2);
           ctx!.fill();
-          ctx!.fillStyle = "#fff4c4";
+          ctx!.fillStyle = "#fffbe8";
           ctx!.beginPath();
           ctx!.arc(x, y, r * 0.9, 0, Math.PI * 2);
           ctx!.fill();
@@ -201,7 +202,12 @@ function Simulation({ t, reduced }: Pick<AppProps, "t" | "reduced">) {
     el.addEventListener("pointermove", move);
     el.addEventListener("pointerup", up);
     el.addEventListener("pointercancel", () => (aim.current = null));
+    const load = (e: Event) => {
+      w.load((e as CustomEvent<Preset>).detail);
+      render(performance.now());
+    };
     box.addEventListener("nyron:reset", reset);
+    box.addEventListener("nyron:preset", load);
     const observer = new ResizeObserver(resize);
     observer.observe(box);
     resize();
@@ -213,6 +219,7 @@ function Simulation({ t, reduced }: Pick<AppProps, "t" | "reduced">) {
       el.removeEventListener("pointermove", move);
       el.removeEventListener("pointerup", up);
       box.removeEventListener("nyron:reset", reset);
+      box.removeEventListener("nyron:preset", load);
     };
   }, []);
 
@@ -228,6 +235,22 @@ function Simulation({ t, reduced }: Pick<AppProps, "t" | "reduced">) {
         <p className="os-lab-hint">{t.labHint}</p>
       </div>
       <div className="os-lab-controls">
+        <div className="os-seg is-compact" role="radiogroup" aria-label={t.labPreset}>
+          {PRESETS.map((p) => (
+            <button
+              key={p}
+              role="radio"
+              aria-checked={preset === p}
+              className={preset === p ? "is-sel" : ""}
+              onClick={() => {
+                setPreset(p);
+                wrap.current?.dispatchEvent(new CustomEvent("nyron:preset", { detail: p }));
+              }}
+            >
+              {t[`preset_${p}` as const]}
+            </button>
+          ))}
+        </div>
         <button className="os-btn" onClick={() => setRunning((r) => !r)} aria-pressed={running}>
           {running ? <Pause size={14} /> : <Play size={14} />}
           {running ? t.labPause : t.labPlay}

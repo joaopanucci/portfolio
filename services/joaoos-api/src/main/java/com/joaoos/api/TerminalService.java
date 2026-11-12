@@ -21,7 +21,7 @@ public class TerminalService {
         var lines = switch (command) {
             case "help" -> List.of("help · about · projects · skills · nyron · java --version · whoami · clear");
             case "about" -> List.of(text.get("about"));
-            case "projects" -> List.of("Dakiali — https://dakiali.com", "JELCH Group — https://jelchgroup.com", "AutoDock — https://github.com/joaopanucci/autodock", "Nyron Engine · Java", "SAPS", "Acho");
+            case "projects" -> List.of("Dakiali — https://dakiali.com", "JELCH Group — https://jelchgroup.com", "AutoDock — https://github.com/joaopanucci/autodock", "Nyron Engine · Java", "SAPS — https://saps.saude.ms.gov.br");
             case "skills" -> List.of("Java · Spring Boot · TypeScript · React · Docker · PostgreSQL");
             case "nyron" -> NyronDemo.run(language);
             case "clear" -> List.<String>of();

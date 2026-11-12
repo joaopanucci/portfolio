@@ -95,7 +95,7 @@ export function MenuBar({
       items: [
         { label: t.aboutOS, onSelect: () => onOpen("about") },
         "separator",
-        { label: t.settings, onSelect: () => onOpen("settings") },
+        { label: `${t.settings}…`, onSelect: () => onOpen("settings") },
         "separator",
         { label: t.lock, onSelect: onLock },
       ],

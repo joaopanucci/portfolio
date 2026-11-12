@@ -45,7 +45,7 @@ function DockItem({
         transition={bouncing ? { duration: 0.9, ease: "easeOut" } : { duration: 0.2 }}
         whileTap={{ scale: 0.9 }}
       >
-        <AppIcon icon={app.icon} colors={app.colors} size="100%" />
+        <AppIcon src={app.src} size="100%" />
         <span className="os-dock-tip" aria-hidden>
           {label}
         </span>
@@ -63,6 +63,7 @@ export function Dock({
   magnify,
   compact,
   onOpen,
+  onLaunchpad,
 }: {
   t: Words;
   running: Set<AppId>;
@@ -71,9 +72,10 @@ export function Dock({
   magnify: boolean;
   compact: boolean;
   onOpen: (id: AppId) => void;
+  onLaunchpad: () => void;
 }) {
   const mouseX = useMotionValue(Infinity);
-  const base = compact ? 40 : 54;
+  const base = compact ? 36 : 54;
   const max = magnify && !compact ? 88 : base;
   return (
     <nav className="os-dock-wrap" aria-label={t.apps}>
@@ -86,6 +88,17 @@ export function Dock({
         onPointerLeave={() => mouseX.set(Infinity)}
         style={{ height: max + 20 }}
       >
+        <DockItem
+          app={{ id: "about", src: "/icons/yaru/launchpad.png", size: [0, 0], dock: true }}
+          mouseX={mouseX}
+          base={base}
+          max={max}
+          label={t.launchpad}
+          running={false}
+          dimmed={false}
+          bouncing={false}
+          onOpen={onLaunchpad}
+        />
         {apps
           .filter((a) => a.dock)
           .map((app, i, list) => (

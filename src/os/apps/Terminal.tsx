@@ -1,10 +1,13 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { apps } from "../apps";
 import { callJava, useJavaStatus } from "../java";
+import { cosmicDate } from "../timeline";
 import type { AppProps } from "./types";
 
 type Entry = { command: string; output: string[]; error?: boolean };
-const COMMANDS = ["help", "about", "projects", "skills", "nyron", "java --version", "whoami", "clear"];
+const COMMANDS = ["help", "about", "projects", "skills", "nyron", "neofetch", "java --version", "whoami", "clear"];
+const LOCAL_HELP = "neofetch · open <app> · theme <cyan|violet|amber> · date --cosmic";
 const BANNER = [
   "      ✦        JoãoOS · Universe Edition",
   "    ·   ·      java · spring · react · nyron",
@@ -12,11 +15,12 @@ const BANNER = [
   "    ·   ·",
 ];
 
-export function TerminalApp({ t, language }: AppProps) {
+export function TerminalApp({ t, language, prefs, update, openApp }: AppProps) {
   const java = useJavaStatus();
   const [history, setHistory] = useState<Entry[]>([]);
   const [command, setCommand] = useState("");
   const [busy, setBusy] = useState(false);
+  const [startedAt] = useState(() => Date.now());
   const recall = useRef<{ list: string[]; index: number }>({ list: [], index: 0 });
   const controller = useRef<AbortController | null>(null);
   const end = useRef<HTMLDivElement>(null);
@@ -26,6 +30,47 @@ export function TerminalApp({ t, language }: AppProps) {
   useEffect(() => {
     end.current?.scrollIntoView({ block: "end" });
   }, [history, busy]);
+
+  /** Commands that act on the desktop itself run in the browser, never on the JVM. */
+  function runLocal(text: string): { lines: string[]; error?: boolean } | null {
+    const [name, ...rest] = text.split(/\s+/);
+    const arg = rest.join(" ").toLowerCase();
+    if (text === "neofetch") {
+      const mins = Math.floor((Date.now() - startedAt) / 60000);
+      const secs = Math.floor(((Date.now() - startedAt) % 60000) / 1000);
+      return {
+        lines: [
+          "joao@joaoos",
+          "-----------",
+          "OS:      JoãoOS Universe Edition",
+          "Host:    João Panucci",
+          "Stack:   Next.js 16 · React 19 · Java 21",
+          `Java:    ${java === "live" ? "JVM " + t.javaLive : t.javaDemo}`,
+          "Shell:   zsh",
+          `Theme:   ${prefs.accent}`,
+          `Uptime:  ${mins}m ${secs}s`,
+        ],
+      };
+    }
+    if (text === "date --cosmic") {
+      const c = cosmicDate(0, language);
+      return { lines: [`${t.cosmicNow}: ${c.date} · ${c.time}`] };
+    }
+    if (name === "theme") {
+      if (arg === "cyan" || arg === "violet" || arg === "amber") {
+        update({ accent: arg });
+        return { lines: [`theme → ${arg}`] };
+      }
+      return { lines: [t.unknownTheme], error: true };
+    }
+    if (name === "open") {
+      const app = apps.find((a) => a.id === arg);
+      if (!app) return { lines: [t.unknownApp + ": " + (arg || "—"), apps.map((a) => a.id).join(" · ")], error: true };
+      openApp(app.id);
+      return { lines: [`open ${app.id}`] };
+    }
+    return null;
+  }
 
   async function run(raw: string) {
     if (busy) return;
@@ -38,12 +83,18 @@ export function TerminalApp({ t, language }: AppProps) {
     recall.current.list.push(text);
     recall.current.index = recall.current.list.length;
     if (text === "clear") return setHistory([]);
+    const local = runLocal(text);
+    if (local) {
+      setHistory((h) => [...h.slice(-99), { command: text, output: local.lines, error: local.error }]);
+      return;
+    }
     setBusy(true);
     const abort = new AbortController();
     controller.current = abort;
     try {
       const r = await callJava(text, language, abort.signal);
-      setHistory((h) => [...h.slice(-99), { command: text, output: r.lines, error: !r.ok }]);
+      const lines = text === "help" ? [...r.lines, LOCAL_HELP] : r.lines;
+      setHistory((h) => [...h.slice(-99), { command: text, output: lines, error: !r.ok }]);
     } catch {
       /* aborted on unmount */
     } finally {

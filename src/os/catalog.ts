@@ -1,17 +1,17 @@
 import type { Words } from "./i18n";
 
-export type ProjectId = "dakiali" | "jelch" | "autodock" | "nyron" | "saps" | "acho";
+export type ProjectId = "dakiali" | "jelch" | "autodock" | "nyron" | "saps";
 
 export type Project = {
   id: ProjectId;
   title: string;
   category: "tools" | "companies" | "institutional";
-  badge?: "private" | "source" | "institutional" | "inDevelopment";
+  badge?: "private" | "source" | "production" | "inDevelopment";
   stack: string[];
   colors: [string, string];
   icon: "box" | "cpu" | "building" | "heart" | "pin" | "globe";
   links: { kind: "visit" | "community" | "github"; href: string }[];
-  descKey: keyof Pick<Words, "dakiali" | "jelch" | "autodock" | "nyronDesc" | "saps" | "acho">;
+  descKey: keyof Pick<Words, "dakiali" | "jelch" | "autodock" | "nyronDesc" | "saps">;
 };
 
 export const publicLinks = {
@@ -54,9 +54,9 @@ export const projects: Project[] = [
     title: "Dakiali",
     category: "companies",
     badge: "private",
-    stack: [],
+    stack: ["Java", "Spring Boot", "PostgreSQL", "React Native", "Vue"],
     colors: ["#f472b6", "#db2777"],
-    icon: "globe",
+    icon: "pin",
     links: [{ kind: "visit", href: "https://dakiali.com" }],
     descKey: "dakiali",
   },
@@ -74,23 +74,12 @@ export const projects: Project[] = [
     id: "saps",
     title: "SAPS",
     category: "institutional",
-    badge: "inDevelopment",
+    badge: "production",
     stack: ["Java", "Spring Boot", "React", "TypeScript", "PostgreSQL", "Docker"],
     colors: ["#34d399", "#059669"],
     icon: "heart",
-    links: [],
+    links: [{ kind: "visit", href: "https://saps.saude.ms.gov.br" }],
     descKey: "saps",
-  },
-  {
-    id: "acho",
-    title: "Acho",
-    category: "institutional",
-    badge: "inDevelopment",
-    stack: ["Java", "Spring Boot", "PostgreSQL", "React Native", "Vue"],
-    colors: ["#fb7185", "#e11d48"],
-    icon: "pin",
-    links: [],
-    descKey: "acho",
   },
 ];
 

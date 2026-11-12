@@ -21,6 +21,12 @@ export const metadata: Metadata = {
     url: "https://joaopanucci.com",
     siteName: "João Panucci",
     type: "website",
+    locale: "pt_BR",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "João Panucci | Software Developer",
+    description: "Um portfólio em forma de sistema operacional cósmico. Java, Spring Boot, React e Nyron Engine.",
   },
 };
 

@@ -8,7 +8,7 @@ janelas arrastáveis, Spotlight (`⌘K`/`Ctrl+K`), linha do tempo do universo e 
 | App | O que mostra |
 | --- | --- |
 | Sobre mim | Perfil, experiência e tecnologias |
-| Projetos | Nyron Engine, AutoDock, Dakiali, JELCH Group, SAPS, Acho |
+| Projetos | Nyron Engine, AutoDock, Dakiali, JELCH Group, SAPS |
 | Linha do Tempo | Do Big Bang ao código, com calendário cósmico |
 | Nyron Lab | Simulação orbital (lançamento por arraste), código Java ilustrativo e execução na JVM |
 | Terminal | Comandos respondidos pelo serviço Java (ou modo demo, sem o serviço) |
@@ -16,6 +16,11 @@ janelas arrastáveis, Spotlight (`⌘K`/`Ctrl+K`), linha do tempo do universo e 
 | Configurações | Idioma (PT/EN/ES), wallpaper, cor de destaque, redução de movimento |
 
 Código do front-end em `src/os/`; textos em `src/os/i18n.ts` e `src/os/timeline.ts`.
+
+## Créditos
+
+Ícones dos apps: tema **Yaru** (Ubuntu), licença CC BY-SA 4.0 — veja `public/icons/yaru/README.md`.
+Ícones de interface: Lucide e Phosphor.
 
 ## Rodando
 

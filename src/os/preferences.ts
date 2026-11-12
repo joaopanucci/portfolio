@@ -4,7 +4,7 @@ import type { Language } from "./i18n";
 
 export type Preferences = {
   language: Language;
-  wallpaper: "live" | "image" | "gif";
+  wallpaper: "nebula" | "ember" | "aurora";
   reduce: boolean;
   accent: "cyan" | "violet" | "amber";
   magnify: boolean;
@@ -12,7 +12,7 @@ export type Preferences = {
 
 const defaults: Preferences = {
   language: "pt",
-  wallpaper: "live",
+  wallpaper: "nebula",
   reduce: false,
   accent: "cyan",
   magnify: true,
@@ -24,12 +24,7 @@ const listeners = new Set<() => void>();
 
 function parse(raw: string | null, legacy: string | null): Preferences {
   const value = raw ? JSON.parse(raw) : { language: legacy };
-  const wallpaper =
-    value?.wallpaper === "image" || value?.wallpaper === "static"
-      ? "image"
-      : value?.wallpaper === "gif" || value?.wallpaper === "animated"
-        ? "gif"
-        : "live";
+  const wallpaper = ["ember", "aurora"].includes(value?.wallpaper) ? value.wallpaper : "nebula";
   return {
     language: ["pt", "en", "es"].includes(value?.language)
       ? value.language

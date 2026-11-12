@@ -1,15 +1,16 @@
 "use client";
 import { motion } from "motion/react";
-import { AtSign, Code2, Copy, ExternalLink, MessageCircle, Network } from "lucide-react";
+import { Copy, ExternalLink } from "lucide-react";
+import { AppIcon } from "../AppIcon";
 import { publicLinks } from "../catalog";
 import type { AppProps } from "./types";
 
 export function ContactApp({ t, toast }: AppProps) {
   const rows = [
-    { icon: AtSign, label: "E-mail", value: publicLinks.email, href: `mailto:${publicLinks.email}`, colors: ["#60a5fa", "#2563eb"] },
-    { icon: Code2, label: "GitHub", value: "github.com/joaopanucci", href: publicLinks.github, colors: ["#94a3b8", "#334155"] },
-    { icon: Network, label: "LinkedIn", value: "linkedin.com/in/jaopanucci", href: publicLinks.linkedin, colors: ["#38bdf8", "#0369a1"] },
-    { icon: MessageCircle, label: "Discord · AutoDock", value: t.community, href: publicLinks.discord, colors: ["#818cf8", "#4f46e5"] },
+    { src: "/icons/yaru/contact.png", label: "E-mail", value: publicLinks.email, href: `mailto:${publicLinks.email}` },
+    { src: "/icons/yaru/engine.png", label: "GitHub", value: "github.com/joaopanucci", href: publicLinks.github },
+    { src: "/icons/yaru/about.png", label: "LinkedIn", value: "linkedin.com/in/jaopanucci", href: publicLinks.linkedin },
+    { src: "/icons/yaru/chat.png", label: "Discord · AutoDock", value: t.community, href: publicLinks.discord },
   ];
   return (
     <div className="os-pane os-contact">
@@ -23,9 +24,7 @@ export function ContactApp({ t, toast }: AppProps) {
             transition={{ delay: i * 0.07, type: "spring", stiffness: 300, damping: 26 }}
           >
             <a href={row.href} target={row.href.startsWith("mailto") ? undefined : "_blank"} rel="noreferrer">
-              <span className="os-appicon" style={{ width: 38, height: 38, background: `linear-gradient(160deg, ${row.colors[0]}, ${row.colors[1]})` }}>
-                <row.icon strokeWidth={1.8} />
-              </span>
+              <AppIcon src={row.src} size={40} />
               <span className="os-contact-text">
                 <b>{row.label}</b>
                 <small>{row.value}</small>

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { Orbit, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { apps, projectIcons, type AppId } from "./apps";
 import { AppIcon } from "./AppIcon";
 import { projects } from "./catalog";
@@ -45,17 +45,16 @@ function SpotlightPanel({
         title: t[a.id],
         sub: "",
         kind: t.kindApp,
-        icon: <AppIcon icon={a.icon} colors={a.colors} size={30} />,
+        icon: <AppIcon src={a.src} size={30} />,
         run: () => onOpen(a.id),
       })),
       ...projects.map((p) => {
-        const Icon = projectIcons[p.icon];
         return {
           key: `project-${p.id}`,
           title: p.title,
           sub: t[p.descKey],
           kind: t.kindProject,
-          icon: <AppIcon icon={Icon} colors={p.colors} size={30} />,
+          icon: <AppIcon src={projectIcons[p.icon]} size={30} />,
           run: () => onOpen("projects", p.id),
         };
       }),
@@ -64,7 +63,7 @@ function SpotlightPanel({
         title: e.text[language].title,
         sub: e.text[language].when,
         kind: t.kindEra,
-        icon: <AppIcon icon={Orbit} colors={e.colors} size={30} />,
+        icon: <AppIcon src="/icons/yaru/timeline.png" size={30} />,
         run: () => onOpen("cosmos", e.id),
       })),
     ];

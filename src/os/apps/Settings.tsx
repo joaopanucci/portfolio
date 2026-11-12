@@ -10,10 +10,10 @@ const accents: { id: Preferences["accent"]; color: string; key: "cyan" | "violet
   { id: "violet", color: "#c4b5fd", key: "violet" },
   { id: "amber", color: "#fcd34d", key: "amber" },
 ];
-const wallpapers: { id: Preferences["wallpaper"]; key: "wallpaperLive" | "wallpaperImage" | "wallpaperGif"; src?: string }[] = [
-  { id: "live", key: "wallpaperLive" },
-  { id: "image", key: "wallpaperImage", src: "/wallpapers/joaoos-nebula.png" },
-  { id: "gif", key: "wallpaperGif", src: "/wallpapers/joaoos-nebula-animated.gif" },
+const wallpapers: { id: Preferences["wallpaper"]; key: "wallpaperNebula" | "wallpaperEmber" | "wallpaperAurora"; css: string }[] = [
+  { id: "nebula", key: "wallpaperNebula", css: "radial-gradient(60% 80% at 70% 30%, #8b5cf6aa, transparent 70%), radial-gradient(60% 70% at 25% 75%, #2563ebcc, transparent 70%), #060a1c" },
+  { id: "ember", key: "wallpaperEmber", css: "radial-gradient(60% 80% at 70% 30%, #f97316aa, transparent 70%), radial-gradient(60% 70% at 25% 75%, #be123ccc, transparent 70%), #0c0408" },
+  { id: "aurora", key: "wallpaperAurora", css: "radial-gradient(60% 80% at 70% 30%, #a78bfaaa, transparent 70%), radial-gradient(60% 70% at 25% 75%, #14b8a6cc, transparent 70%), #04101a" },
 ];
 
 function Toggle({ label, hint, checked, onChange }: { label: string; hint?: string; checked: boolean; onChange: (v: boolean) => void }) {
@@ -59,11 +59,7 @@ export function SettingsApp({ t, prefs, update }: AppProps) {
                     className={prefs.wallpaper === w.id ? "is-sel" : ""}
                     onClick={() => update({ wallpaper: w.id })}
                   >
-                    <span
-                      className="os-wall-thumb"
-                      style={w.src ? { backgroundImage: `url(${w.src})` } : undefined}
-                      data-live={w.id === "live" ? "" : undefined}
-                    />
+                    <span className="os-wall-thumb" style={{ background: w.css }} />
                     {t[w.key]}
                   </button>
                 ))}

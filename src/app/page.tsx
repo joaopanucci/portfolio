@@ -9,7 +9,7 @@ export default function Home() {
         <h1>João Panucci — Software Developer</h1>
         <p>
           Desenvolvedor de software com foco em Java, Spring Boot, React e soluções digitais. Projetos: Nyron Engine,
-          AutoDock, Dakiali, JELCH Group, SAPS e Acho.
+          AutoDock, Dakiali, JELCH Group, SAPS.
         </p>
         <ul>
           <li><a href="https://github.com/joaopanucci">GitHub</a></li>

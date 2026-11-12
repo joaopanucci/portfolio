@@ -14,7 +14,17 @@ export type WindowState = {
   height: number;
   minimized: boolean;
   maximized: boolean;
+  /** Tiled to half of the screen; x/y/width/height keep the floating geometry. */
+  snap?: "left" | "right" | null;
 };
+export type SnapZone = "left" | "right" | "max";
+
+export function snapBox(zone: "left" | "right" | "max", bounds: Bounds) {
+  const height = Math.max(1, bounds.height - MENU_H - (DOCK_H - 12));
+  if (zone === "max") return { left: 8, top: MENU_H, width: bounds.width - 16, height };
+  const width = bounds.width / 2 - 12;
+  return { left: zone === "left" ? 8 : bounds.width / 2 + 4, top: MENU_H, width, height };
+}
 export type Bounds = { width: number; height: number };
 export const initialBounds: Bounds = { width: 1280, height: 800 };
 export const MENU_H = 30;
@@ -42,6 +52,7 @@ export function AppWindow({
   update,
   focus,
   close,
+  onSnapPreview,
 }: {
   state: WindowState;
   zIndex: number;
@@ -52,14 +63,18 @@ export function AppWindow({
   update: (patch: Partial<WindowState>) => void;
   focus: () => void;
   close: () => void;
+  onSnapPreview: (zone: SnapZone | null) => void;
 }) {
-  const gesture = useRef<{ x: number; y: number; state: WindowState; resize: boolean } | null>(null);
+  const gesture = useRef<{ x: number; y: number; state: WindowState; resize: boolean; zone: SnapZone | null } | null>(null);
   const [dragging, setDragging] = useState(false);
   const w = constrain(state, bounds);
   const mobile = bounds.width < 640;
   const full = w.maximized || mobile;
   const meta = appById[w.id];
-  const box = full
+  const snapped = !full && !!w.snap;
+  const box = snapped
+    ? snapBox(w.snap!, bounds)
+    : full
     ? {
         left: mobile ? 0 : 8,
         top: MENU_H,
@@ -73,7 +88,13 @@ export function AppWindow({
   function start(e: React.PointerEvent<HTMLElement>, resize = false) {
     if (full || (!resize && (e.target as HTMLElement).closest("button"))) return;
     e.currentTarget.setPointerCapture(e.pointerId);
-    gesture.current = { x: e.clientX, y: e.clientY, state: w, resize };
+    let origin = w;
+    if (snapped && !resize) {
+      // dragging a tiled window pops it back out under the pointer
+      origin = constrain({ ...w, snap: null, x: e.clientX - w.width / 2, y: e.clientY - 18 }, bounds);
+      update(origin);
+    }
+    gesture.current = { x: e.clientX, y: e.clientY, state: origin, resize, zone: null };
     setDragging(true);
   }
   function move(e: React.PointerEvent<HTMLElement>) {
@@ -81,6 +102,11 @@ export function AppWindow({
     if (!g) return;
     const ddx = e.clientX - g.x;
     const ddy = e.clientY - g.y;
+    if (!g.resize) {
+      g.zone =
+        e.clientY <= MENU_H + 6 ? "max" : e.clientX <= 10 ? "left" : e.clientX >= bounds.width - 10 ? "right" : null;
+      onSnapPreview(g.zone);
+    }
     update(
       constrain(
         g.resize
@@ -91,8 +117,12 @@ export function AppWindow({
     );
   }
   function end() {
+    const zone = gesture.current?.zone;
     gesture.current = null;
     setDragging(false);
+    onSnapPreview(null);
+    if (zone === "max") update({ maximized: true, snap: null });
+    else if (zone) update({ snap: zone });
   }
 
   return (
@@ -101,7 +131,7 @@ export function AppWindow({
       aria-label={t[w.id]}
       tabIndex={-1}
       inert={w.minimized}
-      className={`os-window ${active ? "is-active" : ""} ${dragging ? "is-dragging" : ""} ${full ? "is-full" : ""}`}
+      className={`os-window ${active ? "is-active" : ""} ${dragging ? "is-dragging" : ""} ${full || snapped ? "is-full" : ""}`}
       onPointerDown={focus}
       onFocusCapture={focus}
       style={{ ...box, zIndex, transformOrigin: "50% 60%" }}
@@ -116,7 +146,7 @@ export function AppWindow({
     >
       <div
         className="os-titlebar"
-        onDoubleClick={() => update({ maximized: !w.maximized })}
+        onDoubleClick={() => update({ maximized: !w.maximized, snap: null })}
         onPointerDown={(e) => start(e)}
         onPointerMove={move}
         onPointerUp={end}
@@ -134,18 +164,18 @@ export function AppWindow({
             className="os-light is-max"
             aria-label={w.maximized ? t.restore : t.maximize}
             aria-pressed={w.maximized}
-            onClick={() => update({ maximized: !w.maximized })}
+            onClick={() => update({ maximized: !w.maximized, snap: null })}
           >
             <Plus size={9} strokeWidth={3.2} />
           </button>
         </div>
         <span className="os-title">
-          <AppIcon icon={meta.icon} colors={meta.colors} size={16} className="os-title-icon" />
+          <AppIcon src={meta.src} size={18} className="os-title-icon" />
           {t[w.id]}
         </span>
       </div>
       <div className="os-content">{children}</div>
-      {!full && (
+      {!full && !snapped && (
         <button
           className="os-resize"
           aria-label={t.resize}
